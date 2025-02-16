@@ -22,7 +22,6 @@
 #include "BlackHole.hpp"
 #include "StateMachine.hpp"
 #include "EscapePortal.hpp"
-#include "SimpleTextOut.hpp"
 #include "ShaderProgram.hpp"
 #include "PipelineProgram.hpp"
 #include "TextRenderer.hpp"

@@ -340,9 +340,12 @@ Derivative App::evaluate(const State& initial,
 
 float App::acceleration(const State& state, double t)
 {
-	const float k = 15.0f;
-	const float b = 0.1f;
-	return -k * state.x - b * state.v;
+	//const float k = 15.0f;
+	//const float b = 0.1f;
+	//return -k * state.x - b * state.v;
+	float nextPos = state.x + state.v;
+	return nextPos - state.x;
+
 }
 
 void App::integrate(State& state,
