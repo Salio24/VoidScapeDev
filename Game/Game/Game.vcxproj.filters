@@ -138,9 +138,6 @@
     <ClCompile Include="BackgroundRenderer.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
-    <ClCompile Include="cont.cpp">
-      <Filter>Externals</Filter>
-    </ClCompile>
     <ClCompile Include="JsonFileManager.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>

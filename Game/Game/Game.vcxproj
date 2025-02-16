@@ -235,7 +235,6 @@
     <ClCompile Include="BlackHole.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CollisionHandler.cpp" />
-    <ClCompile Include="cont.cpp" />
     <ClCompile Include="EscapePortal.cpp" />
     <ClCompile Include="GameEntity.cpp" />
     <ClCompile Include="GameObject.cpp" />
