@@ -1,0 +1,789 @@
+#include "App.hpp"
+#include "glm/gtx/string_cast.hpp"
+#include <cmath>
+#include <algorithm>
+#include "Sign.hpp"
+#include <SDL3/SDL_image.h>
+#include <SDL3/SDL_mixer.h>
+#include <glm/gtx/norm.hpp>
+#include <random>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtx/exterior_product.hpp>
+
+App::App() : mAnimationHandler(mTextureHandler) {
+	StartUp();
+}
+
+App::~App() {
+	ShutDown();
+}
+
+void App::StartUp() {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+		std::cout << "SDL3 could not initialize video subsystem or audio subsystem" << std::endl;
+		exit(1);
+	}
+
+	SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
+	SDL_Rect bounds;
+
+	if (SDL_GetDisplayBounds(displayID, &bounds) == 0) {
+		SDL_Log("Failed to get display bounds: %s", SDL_GetError());
+	}
+
+	if (bounds.h < 1080) {
+		if (bounds.h < 720) {
+			mWindowHeight = 480;
+			mWindowWidth = 854;
+			currentResolutionIndex = 0;
+		}
+		else {
+			mWindowHeight = 720;
+			mWindowWidth = 1280;
+			currentResolutionIndex = 1;
+		}
+	}
+
+	screenSize.x = bounds.w;
+	screenSize.y = bounds.h;
+
+
+	resolutions.push_back(glm::ivec2(854, 480));
+	resolutions.push_back(glm::ivec2(1280, 720));
+	resolutions.push_back(glm::ivec2(1366, 768));
+	resolutions.push_back(glm::ivec2(1600, 900));
+	resolutions.push_back(glm::ivec2(1920, 1080));
+	resolutions.push_back(glm::ivec2(2560, 1440));
+	resolutions.push_back(glm::ivec2(3840, 2160));
+	resolutions.push_back(glm::ivec2(5120, 2880));
+	resolutions.push_back(glm::ivec2(7680, 4320));
+
+	windowModes.push_back("windowed");
+	windowModes.push_back("fullscreen");
+
+	if (IMG_Init(IMG_INIT_PNG) == 0) {
+		std::cerr << "SDL3_image could not be initialized" << std::endl;
+		exit(1);
+	}
+	if (Mix_OpenAudio(0, NULL) < 0)
+	{
+		std::cerr << "SDL3_mixer could not be initialized" << std::endl;
+		exit(1);
+	}
+
+
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+	if (debugMode) {
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+	}
+
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+	mWindow = SDL_CreateWindow("Never Gona Give You Up", mWindowWidth, mWindowHeight, SDL_WINDOW_OPENGL);
+
+	SDL_SetWindowPosition(mWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+	if (mWindow == nullptr) {
+		std::cout << "SDL_Window was not able to be created" << std::endl;
+		exit(1);
+	}
+
+	mGlContext = SDL_GL_CreateContext(mWindow);
+	if (mGlContext == nullptr) {
+		std::cout << "OpenGL context not available" << std::endl;
+		exit(1);
+	}
+	if (vsync == false) {
+		SDL_GL_SetSwapInterval(0);
+	}
+	else {
+		SDL_GL_SetSwapInterval(1);
+	}
+	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+		std::cout << "Glad was not initialized" << std::endl;
+		exit(1);
+	}
+	if (debugMode) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(GLDebugMessageCallback, nullptr);
+		glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
+	}
+
+	std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
+	std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+	std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
+	std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+}
+
+void App::PostStartUp() {
+	mCamera.SetProjectionMatrix();
+
+	mGeneralShaderProgram.CreateShaderProgram("shaders/vertexGeneral.glsl", "shaders/fragmentGeneral.glsl");
+	mTextShaderProgram.CreateShaderProgram("shaders/vertexText.glsl", "shaders/fragmentText.glsl");
+	mBackgroundShaderProgram.CreateShaderProgram("shaders/vertexBackground.glsl", "shaders/fragmentBackground.glsl");
+	mBackgroundFramebufferShaderProgram.CreateShaderProgram("shaders/vertexBackgroundFramebuffer.glsl", "shaders/fragmentBackgroundFramebuffer.glsl");
+
+	mTextRenderer.Init((const char*)"assets/Fonts/PixelOperator8-Bold.ttf", 96);
+
+	mPipelineProgram.CreatePipelineProgram();
+	mPipelineProgram.BindPipelineProgram();
+	mPipelineProgram.BindShaderProgram(mGeneralShaderProgram.ID);
+
+	mBatchRenderer.StartUp(&mGeneralShaderProgram, mPipelineProgram.ID);
+
+	//SDL_Surface* tileset = mTextureHandler.LoadSurface("assets/Level/tiles128up.png");
+	
+	mTextureHandler.InitTextureArray(GL_RGBA8, 512, 512, 2000);
+
+	uint32_t whiteTextureData[128 * 128];
+	for (int i = 0; i < 128 * 128; i++) {
+		whiteTextureData[i] = 0xFFFFFFFF; // RGBA: White
+	}
+	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 128, 128, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
+	mTextureHandler.mLayersUsed[0]++;
+
+	//std::vector<SDL_Surface*> tiles = mTextureHandler.CutTileset(tileset, 128, 128);
+	//for (int i = 0; i < tiles.size(); i++) {
+	//	mTextureHandler.LoadTexture(tiles[i], GL_RGBA, mTextureHandler.mLayersUsed[0], 0);
+	//}
+
+	mAnimationHandler.Init(512);
+
+	mTextOut.Init(mTextureHandler, "assets/Level/Text.png");
+
+	Mix_AllocateChannels(16);
+	mAudioHandler.LoadSounds();
+	mEscapePortal.mSprite.mVertexData.Size = mAnimationHandler.EscapePortalAnimation.Size * mEscapePortal.mSizeMultiplier;
+
+	int maxCombinedUnits, maxFragmentUnits, maxVertexUnits, maxArrayLayers;
+
+	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxCombinedUnits);
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxFragmentUnits);
+	glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &maxVertexUnits);
+	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxArrayLayers);
+
+	printf("Max Combined Texture Units: %d\n", maxCombinedUnits);
+	printf("Max Fragment Texture Units: %d\n", maxFragmentUnits);
+	printf("Max Vertex Texture Units: %d\n", maxVertexUnits);
+	printf("Max Array Texture Layers: %d\n", maxArrayLayers);
+
+	mTextureHandler.LoadAll(0);
+
+	mSceneManager.mUIScenes.LoadMainMenuBackground("assets/UI/Data/Layout/40p.json", mTextureHandler.mUI_BordersT_Offset);
+
+	mBackgroundRenderer.Init();
+
+	mBackgroundRenderer.LoadMenuBackground("assets/UI/background4k.png", &mBackgroundShaderProgram, mPipelineProgram.ID, &mTextureHandler);
+
+	mBackgroundRenderer.LoadLevelBackground(&mBackgroundShaderProgram, &mBackgroundFramebufferShaderProgram, mPipelineProgram.ID, &mTextureHandler);
+}
+void App::LoadGame() {
+	mBlackHole.Reset();
+	mStateMachine.Reset();
+	mActor.Reset(mAnimationHandler.FallAnimation.Size, glm::vec2(400.0f, 350.0f));
+
+	// reset movement handler
+	mMovementHandler.mLookDirection = LookDirections::RIGHT;
+
+	// reset camera
+	mCamera.mCameraOffset = glm::vec2(0.0f, 0.0f);
+
+	// reset app
+	gameStarted = false;
+	titleScreenAlpha            = 0.0f;
+	titleScreenMusicVolume      = 128;
+	titleScreenAlphaTimer       = 0.0f;
+	titleScreenMessageTimer     = 0.0f;
+	startMessageTimer           = 0.0f;
+	titleScreenMusicVolumeTimer = 0.0f;
+
+	// reset and load level
+	//mLevel.mBlocks.clear();
+	//mLevel.LoadLevelJson("levels/GameLevels/32p/Test_Level.json");
+	//mLevel.BuildLevel();
+	//for (int i = 0; i < mLevel.mBlocks.size(); i++) {
+	//	mSceneManager.mCurrentBlocks->at(i).Update();
+	//}
+	// 
+	//mSceneManager.mCurrentBlocks = &mSceneManager.mLevelScene.mLevelBlocks;
+	//mSceneManager.mLevelActive = true;
+	//mSceneManager.mMainMenuActive = false;
+
+	//mSceneManager.mUIScenes.LoadMainMenuBackground("assets/UI/Data/Layout/test40.json", mTextureHandler.mUI_BordersT_Offset);
+
+	if (mSceneManager.mUIScenes.mActiveTab == MenuTabs::LEVELS) {
+		mSceneManager.mUIScenes.TranslateMenuInstant(glm::vec2(-1920.0f, 0.0f));
+	}
+
+
+
+	mSceneManager.mUIScenes.LoadMainMenuSettingsTab(mTextureHandler.mUI_BordersT_Offset, mTextureHandler.mUI_ArrowsT_Offset);
+	mSceneManager.mUIScenes.LoadMainMenuLevelsTab(mTextureHandler.mUI_BordersT_Offset);
+	mSceneManager.LoadMainMenu(mTextureHandler.mUI_BordersT_Offset);
+
+
+	//mSceneManager.mUIScenes.mTestButton.CreateBoxButtonCentered(glm::ivec2(23, 3), glm::vec2(960.0f, 540.0f), 30, mTextureHandler.mUI_BordersT_Offset);
+	//
+	//
+	//mSceneManager.mCurrentBlocks = &mSceneManager.mUIScenes.mBackgroundBlocks;
+	//mSceneManager.mLevelActive = false;
+	//mSceneManager.mMainMenuActive = true;
+
+	//mSceneManager.LoadGameLevel("levels/GameLevels/32p/Level_1.json", &mLevel, mTextureHandler.mBaseT_Offset);
+
+	//mSceneManager.LoadMenuLayout("assets/UI/Data/Layout/test40.json");
+	//mSceneManager.LoadMainMenu(mTextureHandler.mUI_BordersT_Offset);
+
+	// reset music
+	Mix_HaltChannel(13);
+	Mix_HaltMusic();
+	//Mix_PlayMusic(mAudioHandler.IntroMusic, 0);
+	//				mSceneManager.mCurrentBlocks = &mSceneManager.mLevelScene.mLevelBlocks;
+	//			mSceneManager.mLevelActive = true;
+	//			mSceneManager.mMainMenuActive = false;
+
+}
+
+
+void App::MainLoop() {
+	SDL_WarpMouseInWindow(mWindow, mWindowWidth / 2, mWindowHeight / 2);
+	TimePoint1 = std::chrono::system_clock::now();
+	TimePoint2 = std::chrono::system_clock::now();
+	while (!mQuit) {
+		mInputManager.Input();
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glClearColor((14.0f / 256.0f), (7.0f / 256.0f), (27.0f / 256.0f), 1.0f);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+		Update();
+
+		SDL_GL_SwapWindow(mWindow);
+	}
+}
+
+void App::UpdatePlayground() {
+
+	if (mSceneManager.mMainMenuActive && mSceneManager.mUIScenes.mNextTabLoaded) {
+		switch (mSceneManager.mUIScenes.mActiveTab) {
+		case MenuTabs::MAIN:
+
+			if (mSceneManager.mUIScenes.mButtonMap["PLAY"].GetPressState()) {
+				//mSceneManager.mLevelScene.mLevelBlocks.clear();
+				//mSceneManager.mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level.json", mTextureHandler.mBaseT_Offset);
+				//mSceneManager.mCurrentBlocks = &mSceneManager.mLevelScene.mLevelBlocks;
+				//mSceneManager.mLevelActive = true;
+				//mSceneManager.mMainMenuActive = false;
+
+				mSceneManager.mUIScenes.mNextTabLoaded = false;
+				mSceneManager.mUIScenes.mNextTab = MenuTabs::LEVELS;
+				mSceneManager.mUIScenes.mMenuMoveDirection = MenuMoveDirection::LEFT;
+				mSceneManager.mUIScenes.mActiveTab = MenuTabs::LEVELS;
+			}
+
+			if (mSceneManager.mUIScenes.mButtonMap["QUIT"].GetPressState()) {
+				mQuit = true;
+			}
+
+			if (mSceneManager.mUIScenes.mButtonMap["SETTINGS"].GetPressState()) {
+				mSceneManager.mUIScenes.mNextTabLoaded = false;
+				mSceneManager.mUIScenes.mNextTab = MenuTabs::SETTINGS;
+				mSceneManager.mUIScenes.mMenuMoveDirection = MenuMoveDirection::RIGHT;
+				mSceneManager.mUIScenes.mActiveTab = MenuTabs::SETTINGS;
+			}
+			break;
+		case MenuTabs::SETTINGS:
+			if (mSceneManager.mUIScenes.mButtonMap["BACK"].GetPressState()) {
+				mSceneManager.mUIScenes.mNextTabLoaded = false;
+				mSceneManager.mUIScenes.mNextTab = MenuTabs::MAIN;
+				mSceneManager.mUIScenes.mMenuMoveDirection = MenuMoveDirection::LEFT;
+				mSceneManager.mUIScenes.mActiveTab = MenuTabs::MAIN;
+			}
+
+			if (mSceneManager.mUIScenes.mButtonMap["WINDOW_MODE"].GetPressState()) {
+				if (currentWindowModeIndex + 1 <= windowModes.size() - 1) {
+					currentWindowModeIndex += 1;
+				}
+				else {
+					currentWindowModeIndex = 0;
+				}
+				if (windowModes[currentWindowModeIndex] == "windowed") {
+					SDL_SetWindowSize(mWindow, resolutions[currentResolutionIndex].x, resolutions[currentResolutionIndex].y);
+					mWindowWidth = resolutions[currentResolutionIndex].x;
+					mWindowHeight = resolutions[currentResolutionIndex].y;
+
+					viewportOffset.x = 0;
+					viewportOffset.y = 0;
+
+					glViewport(0, 0, mWindowWidth, mWindowHeight);
+					SDL_SetWindowFullscreen(mWindow, false);
+				}
+				else if (windowModes[currentWindowModeIndex] == "fullscreen") {
+					int i = 0;
+					for (; resolutions[i].y != screenSize.y; i++) {
+
+					}
+					SDL_SetWindowSize(mWindow, resolutions[i].x, resolutions[i].y);
+					mWindowWidth = resolutions[i].x;
+					mWindowHeight = resolutions[i].y;
+
+					viewportOffset.x = (screenSize.x - mWindowWidth) / 2;
+					viewportOffset.y = (screenSize.y - mWindowHeight) / 2;
+
+					glViewport(viewportOffset.x, viewportOffset.y, mWindowWidth, mWindowHeight);
+
+					SDL_SetWindowFullscreen(mWindow, true);
+				}
+			}
+
+			if (windowModes[currentWindowModeIndex] != "fullscreen") {
+				if (mSceneManager.mUIScenes.mButtonMap["RESOLUTION_DOWN"].GetPressState()) {
+					if (currentResolutionIndex - 1 >= 0) {
+						currentResolutionIndex -= 1;
+
+						SDL_SetWindowSize(mWindow, resolutions[currentResolutionIndex].x, resolutions[currentResolutionIndex].y);
+						mWindowWidth = resolutions[currentResolutionIndex].x;
+						mWindowHeight = resolutions[currentResolutionIndex].y;
+
+						glViewport(0, 0, mWindowWidth, mWindowHeight);
+						std::cout << glm::to_string(resolutions[currentResolutionIndex]) << std::endl;
+					}
+				}
+
+				if (mSceneManager.mUIScenes.mButtonMap["RESOLUTION_UP"].GetPressState()) {
+					if (currentResolutionIndex + 1 <= resolutions.size() - 1 && resolutions[currentResolutionIndex + 1].y <= screenSize.y) {
+						currentResolutionIndex += 1;
+
+						SDL_SetWindowSize(mWindow, resolutions[currentResolutionIndex].x, resolutions[currentResolutionIndex].y);
+						mWindowWidth = resolutions[currentResolutionIndex].x;
+						mWindowHeight = resolutions[currentResolutionIndex].y;
+						glViewport(0, 0, mWindowWidth, mWindowHeight);
+						std::cout << glm::to_string(resolutions[currentResolutionIndex]) << std::endl;
+					}
+				}
+			}
+			mTextRenderer.RenderText(&mTextShaderProgram, mPipelineProgram.ID, std::format("{}x{}", mWindowWidth, mWindowHeight), 960.0f + 1920.0f, 925.0f, 0.25f, glm::vec3(0.80859375f, 0.80078125f, 0.81640625f), mCamera.GetProjectionMatrix(), mSceneManager.mUIScenes.mButtonMap["RESOLUTION"].mModelMatrix);
+			mTextRenderer.RenderText(&mTextShaderProgram, mPipelineProgram.ID, windowModes[currentWindowModeIndex], 960.0f + 1920.0f, 795.0f, 0.25f, glm::vec3(0.80859375f, 0.80078125f, 0.81640625f), mCamera.GetProjectionMatrix(), mSceneManager.mUIScenes.mButtonMap["WINDOW_MODE"].mModelMatrix);
+			break;
+		case MenuTabs::LEVELS:
+			if (mSceneManager.mUIScenes.mButtonMap["BACK_LEVEL_TAB"].GetPressState()) {
+				mSceneManager.mUIScenes.mNextTabLoaded = false;
+				mSceneManager.mUIScenes.mNextTab = MenuTabs::MAIN;
+				mSceneManager.mUIScenes.mMenuMoveDirection = MenuMoveDirection::RIGHT;
+				mSceneManager.mUIScenes.mActiveTab = MenuTabs::MAIN;
+			}
+			if (mSceneManager.mUIScenes.mButtonMap["LEVEL_1"].GetPressState()) {
+				mSceneManager.mLevelScene.mLevelBlocks.clear();
+				mSceneManager.mLevelScene.LoadLevel("levels/GameLevels/32p/Level_1.json", mTextureHandler.mBaseT_Offset);
+				mSceneManager.mCurrentBlocks = &mSceneManager.mLevelScene.mLevelBlocks;
+				mSceneManager.mLevelActive = true;
+				mSceneManager.mMainMenuActive = false;
+			}
+			if (mSceneManager.mUIScenes.mButtonMap["TEST_LEVEL"].GetPressState()) {
+				mSceneManager.mLevelScene.mLevelBlocks.clear();
+				mSceneManager.mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level.json", mTextureHandler.mBaseT_Offset);
+				mSceneManager.mCurrentBlocks = &mSceneManager.mLevelScene.mLevelBlocks;
+				mSceneManager.mLevelActive = true;
+				mSceneManager.mMainMenuActive = false;
+			}
+
+			break;
+		}
+	}
+
+	if (!mSceneManager.mUIScenes.mNextTabLoaded) {
+		switch (mSceneManager.mUIScenes.mMenuMoveDirection) {
+			case MenuMoveDirection::LEFT:
+				mSceneManager.mUIScenes.TranslateMenuSmooth(glm::vec2(1920.0f, 0.0f), deltaTime, 3000.0f);
+				break;
+			case MenuMoveDirection::RIGHT:
+				mSceneManager.mUIScenes.TranslateMenuSmooth(glm::vec2(-1920.0f, 0.0f), deltaTime, 3000.0f);
+				break;
+		}
+	}
+
+	//std::cout << glm::to_string(mSceneManager.mUIScenes.translated) << std::endl;
+
+	//std::cout << mSceneManager.mUIScenes.animSpeed << std::endl;
+
+	//std::cout << "Hover: " << mSceneManager.mUIScenes.mTestButton.GetHoverState() << " Press: " << mSceneManager.mUIScenes.mTestButton.GetPressState() << std::endl;
+
+	//static bool pidor = true;
+	 
+	//if (mSceneManager.mUIScenes.mTestButton.GetPressState()) {
+	//	mSceneManager.mCurrentBlocks = &mSceneManager.mLevelScene.mLevelBlocks;
+	//	mSceneManager.mLevelActive = true;
+	//	mSceneManager.mMainMenuActive = false;
+	//}
+	//
+	//
+	//
+	//// chech only on state change like in state machine
+	//if (mSceneManager.mUIScenes.mTestButton.CheckHoverStateChange()) {
+	//	if (mSceneManager.mUIScenes.mTestButton.GetHoverState()) {
+	//		mSceneManager.mUIScenes.mTestButton.ChangeColor(glm::vec3(0.25f, 1.0f, 0.25f));
+	//	}
+	//	else {
+	//		mSceneManager.mUIScenes.mTestButton.ChangeColor(glm::vec3(1.0f, 1.0f, 1.0f));
+	//	}
+	//}
+	//
+	//if (pidor) {
+	//	mSceneManager.mCurrentBlocks = &mSceneManager.mUIScenes.mMainMenuBlocks;
+	//	mSceneManager.mLevelActive = false;
+	//	mSceneManager.mMainMenuActive = true;
+	//	pidor = false;
+	//}
+	//
+	//mSceneManager.mUIScenes.mMainMenuBlocks.clear();
+	//mSceneManager.mUIScenes.mMainMenuBlocks.insert(mSceneManager.mUIScenes.mMainMenuBlocks.end(), mSceneManager.mUIScenes.mBackgroundBlocks.begin(), mSceneManager.mUIScenes.mBackgroundBlocks.end());
+	//mSceneManager.mUIScenes.mMainMenuBlocks.insert(mSceneManager.mUIScenes.mMainMenuBlocks.end(), mSceneManager.mUIScenes.mTestButton.mButtonBlocks.begin(), mSceneManager.mUIScenes.mTestButton.mButtonBlocks.end());
+
+
+}
+
+void App::Update() {
+	// delta time logic vvv
+	TimePoint2 = std::chrono::system_clock::now();
+	static auto lastTime = std::chrono::high_resolution_clock::now();
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<float> elapsedTime = TimePoint2 - TimePoint1;
+	static int frameCount = 0;
+	frameCount++;
+	// Our time per frame coefficient
+	deltaTime = elapsedTime.count();
+	if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count() >= 1) {
+		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
+		auto fps = frameCount * 1000.0 / elapsedTime;
+
+		std::cout << "FPS: " << fps << std::endl;
+
+		frameCount = 0;
+		lastTime = currentTime;
+	}
+	static int o = 0;
+	if (o < 20) {
+		deltaTimeBuffer += deltaTimeRaw;
+	}
+	if (o == 20) {
+		deltaTimeBuffer = 0;
+		o = 0;
+	}
+	else {
+		o++;
+	}
+
+	TimePoint1 = TimePoint2;
+	// delta time logic ^^^
+	if (mSceneManager.mMainMenuActive == true) {
+		mBackgroundRenderer.RenderMenuBackground(&mBackgroundShaderProgram, mPipelineProgram.ID, mCamera.mUIModelMatrix, mCamera.GetProjectionMatrix());
+	}
+	else if (mSceneManager.mLevelActive == true) {
+		mBackgroundRenderer.Update(mCamera.mCameraPosition, mActor.mVelocity, deltaTime);
+		mBackgroundRenderer.RenderLevelBackground(&mBackgroundShaderProgram, &mBackgroundFramebufferShaderProgram, mPipelineProgram.ID, mCamera.GetProjectionMatrix(), mBlackHole.AABBSize.x, mBlackHole.epicenterAABBPos +	mBlackHole.epicenterAABBSize / 2.0f, mCamera.mCameraPosition.x, gameStarted, deltaTime);
+	}
+
+	//std::cout << glm::to_string(mCamera.mCameraPosition) << std::endl;
+
+	UpdatePlayground();
+
+	// game start logic
+	if (gameStarted == false && mActor.mVelocity.x != 0.0f) {
+		Mix_HaltMusic();
+		gameStarted = true;
+	}
+
+	if (gameStarted) {
+		if (Mix_PlayingMusic() == 0)
+		{
+			Mix_PlayMusic(mAudioHandler.LoopMusic, 0);
+		}
+	}
+	else {
+		startMessageTimer += deltaTime;
+		if (startMessageTimer > startMessageTime) {
+			startMessageTimer = 0.0f;
+		}
+		if (startMessageTimer >= 1.0f) {
+		}
+	}
+
+	
+
+	// main menu text render
+	if (mSceneManager.mMainMenuActive == true) {
+		for (int i = 0; i < mSceneManager.mUIScenes.mTextToRender.size(); i++) {
+			mTextRenderer.RenderText(&mTextShaderProgram, mPipelineProgram.ID, mSceneManager.mUIScenes.mTextToRender[i].Text, mSceneManager.mUIScenes.mTextToRender[i].Possition.x, mSceneManager.mUIScenes.mTextToRender[i].Possition.y, mSceneManager.mUIScenes.mTextToRender[i].Scale, mSceneManager.mUIScenes.mTextToRender[i].Color, mCamera.GetProjectionMatrix(), *mSceneManager.mUIScenes.mTextToRender[i].ModelMatrix);
+		}
+	}
+	// movement update
+	mMovementHandler.Update(deltaTime, mActor, mSceneManager.mLevelActive);
+
+	// actor update
+	mActor.Update();
+
+	// black hole update
+	if (gameStarted) {
+		mBlackHole.Update(mSceneManager.mCurrentBlocks, mActor, deltaTime, mAnimationHandler.BlackHoleBirthAnimation, mAnimationHandler.BlackHoleLoopAnimation, mAudioHandler.BlackHoleBorn, mAudioHandler.ConsumedByVoid, mAudioHandler.BlackHoleIdle);
+	}
+
+	//mBatchRenderer.DrawSeperatly(glm::vec2(0.0f, 0.0f), mBlackHole.AABBSize, glm::vec4(0.0f, 0.0f, 1.0f, 0.2f), mCamera.GetProjectionMatrix());
+
+	// dead logic
+	if (mActor.mPosition.y < -500.0f) {
+		if (!mActor.mDead) {
+			mActor.mVelocity = glm::vec2(0.0f, 0.0f);
+			mActor.mIsConsumedByVoid = true;
+			mActor.mDead = true;
+		}
+	}
+	
+	if (mActor.mDead) {
+		if (mActor.mDeadSoundOneShot) {
+			Mix_PlayChannel(14, mAudioHandler.FellDown, 0);
+			mActor.mDeadSoundOneShot = false;
+		}
+	}
+
+	// collision update
+	// separate vector for colliders
+	CollisionUpdate(mSceneManager.mCurrentBlocks, mActor, mMovementHandler.mLeftWallHug, mMovementHandler.mRightWallHug, deltaTime, mMovementHandler.mIsGrounded, mMovementHandler.mIsWallMountableL, mMovementHandler.mIsWallMountableR);
+	// camera update
+	mCamera.Update(mActor.mVelocity, mActor.mScreenPosition, deltaTime);
+
+	for (auto& pair : mSceneManager.mUIScenes.mButtonMap) {
+		mSceneManager.mUIScenes.mButtonMap[pair.first].Update(mCamera.mUIModelMatrix);
+	}
+
+	mSceneManager.mUIScenes.Update(mCamera.mUIModelMatrix);
+
+	// screen position calculation
+	mActor.mScreenPosition = mCamera.GetProjectionMatrix() * glm::vec4(mActor.mPosition.x + mActor.mSprite.mVertexData.Size.x / 2, mActor.mPosition.y + mActor.mSprite.mVertexData.Size.y / 2, 0.0f, 1.0f);
+
+	//mBatchRenderer.DrawSeperatly(glm::vec2(0.0f, 0.0f), glm::vec2(5.0f, 1080.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), mCamera.GetProjectionMatrix());
+
+	// level render vvv
+	mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix());
+
+	//std::cout << mSceneManager.mCurrentBlocks->size() << std::endl;
+
+	if (mSceneManager.mLevelActive == true) {
+		if (gameStarted) {
+			if (mBlackHole.mSprite.mVertexData.Position.x + mBlackHole.mSprite.mVertexData.Size.x > (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x - 80.0f)
+				&& mBlackHole.mSprite.mVertexData.Position.x < (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x + 2000.0f)) {
+				mBatchRenderer.DrawInBatch(mBlackHole.mSprite.mVertexData.Position, mBlackHole.mSprite.mVertexData.Size, mBlackHole.mSprite.mVertexData.TextureIndex, mAnimationHandler.BlackHoleLoopAnimation.Size, mBlackHole.mSprite.mVertexData.TexturePosition);
+			}
+		}
+
+		// buffer of block id that are being sucked into the black hole and visible
+		std::vector<int> flyingBlocks;
+
+		for (int i = 0; i < mSceneManager.mCurrentBlocks->size(); i++) {
+			if (mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position.x + mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Size.x > (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x - 80.0f)
+				&& mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position.x < (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x + 2000.0f) && mSceneManager.mCurrentBlocks->at(i).mIsVisible == true && mSceneManager.mCurrentBlocks->at(i).mIsSucked == false) {
+				mBatchRenderer.DrawInBatch(mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position, mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Size, static_cast<uint32_t>(mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.TextureIndex), glm::vec2(0.25f, 0.25f));
+			}
+			else if (mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position.x + mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Size.x > (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x - 80.0f)
+				&& mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position.x < (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x + 2000.0f) && mSceneManager.mCurrentBlocks->at(i).mIsVisible == true && mSceneManager.mCurrentBlocks->at(i).mIsSucked == true) {
+				flyingBlocks.push_back(i);
+			}
+		}
+
+		mEscapePortal.Update(mAnimationHandler.EscapePortalAnimation, deltaTime, mActor, mAudioHandler.PortalEscape, mAudioHandler.PortalIdle);
+		if (mEscapePortal.mSprite.mVertexData.Position.x + mEscapePortal.mSprite.mVertexData.Size.x > (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x - 80.0f)
+			&& mEscapePortal.mSprite.mVertexData.Position.x < (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x + 2000.0f)) {
+			mBatchRenderer.DrawInBatch(mEscapePortal.mSprite.mVertexData.Position, mEscapePortal.mSprite.mVertexData.Size, mEscapePortal.mSprite.mVertexData.TextureIndex, mAnimationHandler.EscapePortalAnimation.Size, mEscapePortal.mSprite.mVertexData.TexturePosition);
+		}
+
+		mBatchRenderer.EndBatch();
+		mBatchRenderer.Flush();
+
+		for (int i = 0; i < flyingBlocks.size(); i++) {
+			if (mSceneManager.mCurrentBlocks->at(flyingBlocks[i]).mSprite.mVertexData.Position.x + mSceneManager.mCurrentBlocks->at(flyingBlocks[i]).mSprite.mVertexData.Size.x > (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x - 80.0f)
+				&& mSceneManager.mCurrentBlocks->at(flyingBlocks[i]).mSprite.mVertexData.Position.x < (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x + 2000.0f)) {
+				mBatchRenderer.DrawSeperatly(mSceneManager.mCurrentBlocks->at(flyingBlocks[i]).mSprite.mVertexData.Position, mSceneManager.mCurrentBlocks->at(flyingBlocks[i]).mSprite.mVertexData.Size, mCamera.GetProjectionMatrix(),
+					static_cast<uint32_t>(mSceneManager.mCurrentBlocks->at(flyingBlocks[i]).mSprite.mVertexData.TextureIndex), glm::vec2(0.25f, 0.25f), glm::vec2(0.0f, 0.0f), mSceneManager.mCurrentBlocks->at(flyingBlocks[i]).mModelMatrix, false);
+			}
+		}
+	} // level render ^^^ menu render vvv
+	else if (mSceneManager.mMainMenuActive == true) {
+		for (const auto& pair : mSceneManager.mUIScenes.mButtonMap) {
+			if (RectVsRect(glm::vec2(-10.0f, -10.0f), glm::vec2(2000.0f, 1160.0f), pair.second.mTriggerPos, pair.second.mTriggerSize)) {
+			}
+				mSceneManager.mUIScenes.mButtonMap[pair.first].Render(&mBatchRenderer, mCamera.GetProjectionMatrix());
+		}
+
+		mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix());
+		for (int i = 0; i < mSceneManager.mCurrentBlocks->size(); i++) {
+			mBatchRenderer.DrawInBatch(mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position, mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Size, static_cast<uint32_t>(mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.TextureIndex), glm::vec2(0.03125f, 0.03125f), glm::vec2(0.0f, 0.0f), false, mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Color);
+		}
+		mBatchRenderer.EndBatch();
+		mBatchRenderer.Flush(mCamera.mUIModelMatrix);
+	}
+
+	// menu render ^^^
+
+
+	// state machine update
+	mStateMachine.Update(mMovementHandler, mAnimationHandler, mAudioHandler, mActor, deltaTime);
+
+	// actor render
+	if (mActor.mIsVisible == true && mSceneManager.mLevelActive == true) {
+	mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, mStateMachine.mCurrentActorDrawSize, mCamera.GetProjectionMatrix(),
+		mStateMachine.mCurrentActorTextureIndex, mStateMachine.mCurrentActorTextureSize, mStateMachine.mCurrentActorTexturePosition, mActor.mModelMatrix, mStateMachine.mActorFlipped);	
+	}
+
+	//if (mSceneManager.mChangingScene) {
+	//	mSceneManager.SceneChangeAnim(deltaTime);
+	//	mBatchRenderer.DrawSeperatly(glm::vec2(0.0f, 0.0f), mSceneManager.mCurtainSize, glm::vec4((14.0f / 256.0f), (7.0f / 256.0f), (27.0f / 256.0f), 1.0f), mCamera.GetProjectionMatrix(), mCamera.mUIModelMatrix);
+	//}
+	//mBatchRenderer.DrawSeperatly(glm::vec2((1.0f + mActor.mScreenPosition.x) * 960.0f - mActor.mSprite.mVertexData.Size.x / 2, (1.0f + mActor.mScreenPosition.y) * 540.0f), glm::vec2(5.0f, 5.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), mCamera.GetProjectionMatrix(), mCamera.mUIModelMatrix);
+	//
+	//mBatchRenderer.DrawSeperatly(mBlackHole.epicenterAABBPos, mBlackHole.epicenterAABBSize, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), mCamera.GetProjectionMatrix());
+
+
+	// ui elements update
+	//UIUpdate();
+}
+
+void App::UIUpdate() {
+
+	if (mActor.mDead || mActor.mEscaped || mActor.mIsConsumedByVoid) {
+		mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix());
+		mBatchRenderer.DrawInBatch(glm::vec2(0.0f, 0.0f), glm::vec2(1920.0f, 1080.0f), glm::vec4((14.0f / 256.0f), (7.0f / 256.0f), (27.0f / 256.0f), titleScreenAlpha));
+		mBatchRenderer.EndBatch();
+		mBatchRenderer.Flush(mCamera.mUIModelMatrix);
+		if (titleScreenAlphaTimer > titleScreenAlphaTime && titleScreenAlpha < 1.0f) {
+			titleScreenAlpha += 0.004f;
+			titleScreenAlphaTimer = 0.0f;
+		}
+		if (titleScreenAlpha > 1.0f) {
+			titleScreenAlpha = 1.0f;
+		}
+		titleScreenAlphaTimer += deltaTime;
+
+		if (titleScreenMusicVolumeTimer > titleScreenMusicVolumeTime && titleScreenMusicVolume > 0) {
+			titleScreenMusicVolume -= 1;
+			titleScreenMusicVolumeTimer = 0.0f;
+		}
+		if (titleScreenMusicVolume < 0) {
+			titleScreenMusicVolume = 0;
+		}
+		titleScreenMusicVolumeTimer += deltaTime;
+	}
+
+	Mix_VolumeMusic(titleScreenMusicVolume);
+	if (titleScreenAlpha >= 1.0f) {
+		mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix());
+		titleScreenMessageTimer += deltaTime;
+		if (titleScreenMessageTimer > titleScreenMessageTime) {
+			titleScreenMessageTimer = 0.0f;
+		}
+		if (titleScreenMessageTimer >= 1.0f) {
+			mBatchRenderer.DrawInBatch(glm::vec2(960.0f - mTextOut.mTextureSize.x * textSizeMultiplier / 2, 240.0f), mTextOut.mTextureSize * textSizeMultiplier, 
+				static_cast<uint32_t>(mTextOut.mTextTextureIndex), mTextOut.mTextureSize, mTextOut.mTexturePositions[4]);
+			}
+			if (mActor.mIsConsumedByVoid && !mActor.mDead) {
+				mBatchRenderer.DrawInBatch(glm::vec2(960.0f - mTextOut.mTextureSize.x * textSizeMultiplier / 2, 660.0f), mTextOut.mTextureSize * textSizeMultiplier,
+					static_cast<uint32_t>(mTextOut.mTextTextureIndex), mTextOut.mTextureSize, mTextOut.mTexturePositions[0]);
+			}
+			else if (mActor.mIsConsumedByVoid && mActor.mDead) {
+				mBatchRenderer.DrawInBatch(glm::vec2(960.0f - mTextOut.mTextureSize.x * textSizeMultiplier / 2, 660.0f), mTextOut.mTextureSize * textSizeMultiplier,
+					static_cast<uint32_t>(mTextOut.mTextTextureIndex), mTextOut.mTextureSize, mTextOut.mTexturePositions[2]);
+			}
+			else if (!mActor.mIsConsumedByVoid && mActor.mDead) {
+				mBatchRenderer.DrawInBatch(glm::vec2(960.0f - mTextOut.mTextureSize.x * textSizeMultiplier / 2, 660.0f), mTextOut.mTextureSize * textSizeMultiplier,
+					static_cast<uint32_t>(mTextOut.mTextTextureIndex), mTextOut.mTextureSize, mTextOut.mTexturePositions[3]);
+			}
+			else if (mActor.mEscaped) {
+				mBatchRenderer.DrawInBatch(glm::vec2(960.0f - mTextOut.mTextureSize.x * textSizeMultiplier / 2, 660.0f), mTextOut.mTextureSize * textSizeMultiplier,
+					static_cast<uint32_t>(mTextOut.mTextTextureIndex), mTextOut.mTextureSize, mTextOut.mTexturePositions[1]);
+		}
+		mBatchRenderer.EndBatch();
+		mBatchRenderer.Flush(mCamera.mUIModelMatrix);
+	}
+
+}
+
+void App::ShutDown() {
+	SDL_DestroyWindow(mWindow);
+	mWindow = nullptr;
+
+	mBatchRenderer.ShutDown();
+
+	glDeleteProgram(mGraphicsPipelineShaderProgram);
+
+	Mix_Quit();
+	IMG_Quit();
+	SDL_Quit();
+}
+
+App& App::getInstance() {
+	static App* app = new App;
+	return *app;
+}
+
+void APIENTRY App::GLDebugMessageCallback(GLenum source, GLenum type, GLuint id,
+	GLenum severity, GLsizei length,
+	const GLchar* message, const void* param)
+{
+	const char* source_, * type_, * severity_;
+
+	switch (source)
+	{
+	case GL_DEBUG_SOURCE_API:             source_ = "API";             break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   source_ = "WINDOW_SYSTEM";   break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER: source_ = "SHADER_COMPILER"; break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:     source_ = "THIRD_PARTY";     break;
+	case GL_DEBUG_SOURCE_APPLICATION:     source_ = "APPLICATION";     break;
+	case GL_DEBUG_SOURCE_OTHER:           source_ = "OTHER";           break;
+	default:                              source_ = "<SOURCE>";        break;
+	}
+
+	switch (type)
+	{
+	case GL_DEBUG_TYPE_ERROR:               type_ = "ERROR";               break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: type_ = "DEPRECATED_BEHAVIOR"; break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  type_ = "UDEFINED_BEHAVIOR";   break;
+	case GL_DEBUG_TYPE_PORTABILITY:         type_ = "PORTABILITY";         break;
+	case GL_DEBUG_TYPE_PERFORMANCE:         type_ = "PERFORMANCE";         break;
+	case GL_DEBUG_TYPE_OTHER:               type_ = "OTHER";               break;
+	case GL_DEBUG_TYPE_MARKER:              type_ = "MARKER";              break;
+	default:                                type_ = "<TYPE>";              break;
+	}
+
+	switch (severity)
+	{
+	case GL_DEBUG_SEVERITY_HIGH:         severity_ = "HIGH";         break;
+	case GL_DEBUG_SEVERITY_MEDIUM:       severity_ = "MEDIUM";       break;
+	case GL_DEBUG_SEVERITY_LOW:          severity_ = "LOW";          break;
+	case GL_DEBUG_SEVERITY_NOTIFICATION: severity_ = "NOTIFICATION"; break;
+	default:                             severity_ = "<SEVERITY>";   break;
+	}
+
+
+	std::ostringstream stream;
+	stream << "| Id: " << id << " | Severity: " << severity_ << " | Type: " << type_ << " | Source: (" << source_ << ") | Message: " << message << " |" << std::endl;
+	std::string output = stream.str();
+
+	std::string dashes(output.size() - 3, '-');
+
+	if (static bool FistLineBoilerplate = true; FistLineBoilerplate) {
+		std::cout << "" << std::endl;
+		for (size_t i = 0; i < 3; i++) {
+			std::cout << "(WARNING DEBUG MODE IS ENABLED AND MAY LEED TO PERFORMACNE ISSUES)\n" << std::endl;
+		}
+		std::cout << "|" << dashes << "|" << std::endl;
+		FistLineBoilerplate = false;
+	}
+
+	std::cout << output << "|" << dashes << "|" << std::endl;
+
+}
