@@ -41,18 +41,19 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtx/exterior_product.hpp>
 #include <numbers>
+#include "PhysicsComponent.hpp"
 
-struct State
-{
-	float x;      // position
-	float v;      // velocity
-};
-
-struct Derivative
-{
-	float dx;      // dx/dt = velocity
-	float dv;      // dv/dt = acceleration
-};
+//struct State
+//{
+//	float x;      // position
+//	float v;      // velocity
+//};
+//
+//struct Derivative
+//{
+//	float dx;      // dx/dt = velocity
+//	float dv;      // dv/dt = acceleration
+//};
 
 class App {
 public:
@@ -105,6 +106,8 @@ public:
 
 	JsonManager mJsonManager;
 
+	PhysicsComponent mPhysicsComponent;
+
 	bool mQuit{ false };
 	bool mPause{ false };
 
@@ -149,6 +152,7 @@ private:
 	bool gameStarted{ false };
 
 	float deltaTime      { 0.0f };
+	double dtD{ 0.0f };
 
 	float textSizeMultiplier    { 800.0f };
 
@@ -167,16 +171,11 @@ private:
 	State current;
 
 	double t = 0.0;
-	double dt = 1.0f / 10.0f;
+	double dt = 1.0f / 60.0f;
 
-	Derivative evaluate(const State& initial,
-		double t,
-		float dt,
-		const Derivative& d);
+	Derivative evaluate(const State& initial, double t, float dt, const Derivative& d);
 
 	float acceleration(const State& state, double t);
 
-	void integrate(State& state,
-		double t,
-		float dt);
+	void integrate(State& state, double t, float dt);
 };

@@ -359,11 +359,9 @@ void App::integrate(State& state,
 	c = evaluate(state, t, dt * 0.5f, b);
 	d = evaluate(state, t, dt, c);
 
-	float dxdt = 1.0f / 6.0f *
-		(a.dx + 2.0f * (b.dx + c.dx) + d.dx);
+	float dxdt = 1.0f / 6.0f * (a.dx + 2.0f * (b.dx + c.dx) + d.dx);
 
-	float dvdt = 1.0f / 6.0f *
-		(a.dv + 2.0f * (b.dv + c.dv) + d.dv);
+	float dvdt = 1.0f / 6.0f * (a.dv + 2.0f * (b.dv + c.dv) + d.dv);
 
 	state.x = state.x + dxdt * dt;
 	state.v = state.v + dvdt * dt;
@@ -399,13 +397,30 @@ void App::UpdatePlayground(float deltaTime) {
 	static auto lastTime = std::chrono::high_resolution_clock::now();
 	auto currentTime = std::chrono::high_resolution_clock::now();
 
-	if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count() >= 1) {
+	if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count() == 1) {
 		//std::cout << add << std::endl;
 		add = 0;
 		lastTime = currentTime;
 	}
 
 	float speed = 1.0f;
+
+	//static auto currentT = std::chrono::high_resolution_clock::now();
+	//auto newT = std::chrono::high_resolution_clock::now();
+	//
+	//std::chrono::duration<double> elapsedT = newT - currentT;
+	//
+	//currentT = newT;
+	//
+	//static double deltaT = 0.0f;
+	//
+	//deltaT = elapsedT.count();
+	//
+	//if (deltaT > 0.25f) {
+	//	deltaT = 0.25f;
+	//}
+	//
+	//accumulator += deltaT;
 
 	current.v = testSpeeed;
 
@@ -440,7 +455,7 @@ void App::UpdatePlayground(float deltaTime) {
 			if (pos.x < lowest) {
 				lowest = pos.x;
 			}
-			avgBuffer += pos.x;
+			avgBuffer += pos.x;	
 			iterations++;
 			avg = avgBuffer / (float)iterations;
 
@@ -464,10 +479,10 @@ void App::UpdatePlayground(float deltaTime) {
 	state.x = current.x * alpha + previous.x * (1.0f - alpha);
 	state.v = current.v * alpha + previous.v * (1.0f - alpha);
 	
-	std::cout << "Pos: " << state.x << " Speed: " << state.v << std::endl;
+	//std::cout << "Pos: " << state.x << " Speed: " << state.v << std::endl;
 
 	if (iterations == 200) {
-		std::cout << "AvgPos: " << avg << " LowestPos: " << lowest << " HighestPos: " << highest << " Iterations: " << iterations << " DeltaPos: " << highest - lowest <<  " AvgDeltaTime: " << avgDeltaTime << std::endl;
+		//std::cout << "AvgPos: " << avg << " LowestPos: " << lowest << " HighestPos: " << highest << " Iterations: " << iterations << " DeltaPos: " << highest - lowest <<  " AvgDeltaTime: " << avgDeltaTime << std::endl;
 	}
 
 	if (testReset) {
@@ -492,10 +507,33 @@ void App::UpdatePlayground(float deltaTime) {
 		testReset = false;
 	}
 
-	for (int i = 0; i < 10000; i++) {
+	static auto currentT = std::chrono::high_resolution_clock::now();
+	auto newT = std::chrono::high_resolution_clock::now();
+	
+	std::chrono::duration<double> elapsedT = newT - currentT;
+	
+	currentT = newT;
+	
+	static double deltaT = 0.0f;
+	
+	deltaT = elapsedT.count();
+	
+	if (deltaT > 0.25f) {
+		deltaT = 0.25f;
+	}
+
+	mPhysicsComponent.mAccumulator += deltaT;
+
+	mPhysicsComponent.FixedTickrateUpdate();
+
+	//std::cout << glm::to_string(mPhysicsComponent.testV) << std::endl;
+
+	for (int i = 0; i < 12000; i++) {
+		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.future.position, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
 	}
 		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), pos, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
-	//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), glm::vec2(state.x, 800.0f), glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
+		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), glm::vec2(state.x, 800.0f), glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, & mCamera.mUIModelMatrix);
+	//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.pos, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
 
 }
 
@@ -505,15 +543,23 @@ void App::Update() {
 	TimePoint2 = std::chrono::system_clock::now();
 	static auto lastTime = std::chrono::high_resolution_clock::now();
 	auto currentTime = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<float> elapsedTime = TimePoint2 - TimePoint1;
+	std::chrono::duration<float> elapsedTime = TimePoint2 - TimePoint1; 
+	std::chrono::duration<double> elapsedTime123 = TimePoint2 - TimePoint1;
+
 	static int frameCount = 0;
 	frameCount++;
 	// Our time per frame coefficient
 	deltaTime = elapsedTime.count();
+	dtD = elapsedTime123.count();
+	if (dtD > 0.25f) {
+		dtD = 0.25f;
+	}
+	//mPhysicsComponent.mAccumulator += dtD;
+
 	if (deltaTime > 0.25f) {
 		deltaTime = 0.25f;
 	}
-	accumulator += deltaTime;
+	//accumulator += deltaTime;
 	if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count() >= 1) {
 		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
 		fps = frameCount * 1000.0 / elapsedTime;
