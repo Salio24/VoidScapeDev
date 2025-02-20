@@ -103,15 +103,20 @@ void InputManager::Input() {
 			}
 			if (state[SDL_SCANCODE_Y]) {
 				app().testReset = true;
+				app().mPhysicsComponent.nulify();
 			}
 			if (state[SDL_SCANCODE_K]) {
+				app().mPhysicsComponent.testV += glm::vec2(1.0f, 1.0f) * 5.0f;
 				app().testSpeeed += 5.0f;
 			}
 			if (state[SDL_SCANCODE_I]) {
-				app().testSpeeed += -5.0f;
+				app().mPhysicsComponent.testV += glm::vec2(1.0f, 1.0f) * -5.0f;
+				app().testSpeeed -= 5.0f;
 			}
 			if (state[SDL_SCANCODE_L]) {
+				app().mPhysicsComponent.testV = glm::vec2(0.0f, 0.0f);
 				app().testSpeeed = 0.0f;
+
 			}
 			if (state[SDL_SCANCODE_H]) {
 				app().ReloadConfig();

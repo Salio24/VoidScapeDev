@@ -1,6 +1,6 @@
 {
-    "MusicVolume": 2,
-    "SFXVolume": 2,
+    "MusicVolume": 0,
+    "SFXVolume": 0,
     "VSync": false,
     "autoRestart": false,
     "currentResolutionIndex": 4,

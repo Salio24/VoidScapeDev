@@ -239,6 +239,7 @@
     <ClCompile Include="GameEntity.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="PhysicsComponent.cpp" />
     <ClCompile Include="JsonFileManager.cpp" />
     <ClCompile Include="LevelScene.cpp" />
     <ClCompile Include="main.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="GameEntity.hpp" />
     <ClInclude Include="GameObject.hpp" />
     <ClInclude Include="Input.hpp" />
+    <ClInclude Include="PhysicsComponent.hpp" />
     <ClInclude Include="JsonFileManager.hpp" />
     <ClInclude Include="LevelScene.hpp" />
     <ClInclude Include="MovementHandler.hpp" />
