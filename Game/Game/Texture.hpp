@@ -1,11 +1,7 @@
 #pragma once
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_image.h>
 #include <SDL3/SDL_surface.h>
-#include <string>
 #include <array>
 #include <glad/glad.h>
-#include <iostream>
 #include <vector>
 #include <list>
 #include <unordered_map>

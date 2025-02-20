@@ -1,7 +1,6 @@
 #pragma once
 #include "GameEntity.hpp"
 #include <glm/vec2.hpp>
-#include <glm/vec2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "CollisionHandler.hpp"
 

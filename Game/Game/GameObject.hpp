@@ -1,8 +1,6 @@
 #pragma once
 #include "Sprite.hpp"
 #include <glm/glm.hpp>
-#include <iostream>
-
 
 class GameObject {
 public:

@@ -2,7 +2,6 @@
 #include <string>
 #include <nlohmannjson/json.hpp>
 #include "GameObject.hpp"
-#include <fstream>
 #include <vector>
 
 class LevelScene {

@@ -1,5 +1,4 @@
 #pragma once
-#include "Sprite.hpp"
 #include <glm/vec2.hpp>
 #include "GameObject.hpp"
 

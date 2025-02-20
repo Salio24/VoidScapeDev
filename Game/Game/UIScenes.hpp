@@ -2,15 +2,12 @@
 #include <string>
 #include "HelperStructs.hpp"
 #include "BatchRenderer.hpp"
-#include <nlohmannjson/json.hpp>
 #include "GameObject.hpp"
 #include <SDL3/SDL_mixer.h>
-#include <fstream>
 #include <vector>
 #include <random>
 #include <glm/glm.hpp>
 #include <unordered_map>
-#include <cmath>
 
 enum class MenuTabs {
 	MAIN,

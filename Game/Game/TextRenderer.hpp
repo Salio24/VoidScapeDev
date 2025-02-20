@@ -1,6 +1,5 @@
 #pragma once
 #include <ft2build.h>
-#include <iostream>
 #include <glm/glm.hpp>
 #include <map>
 #include <glad/glad.h>

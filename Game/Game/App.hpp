@@ -2,20 +2,14 @@
 #include <SDL3/SDL.h>
 #include "Camera.hpp"
 #include <glad/glad.h>
-#include <iostream>
-#include <sstream>
 #include "Input.hpp"
-#include "Sprite.hpp"
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include "Actor.hpp"
 #include "BatchRenderer.hpp"
 #include "HelperStructs.hpp"
-#include "CollisionHandler.hpp"
 #include "MovementHandler.hpp"
 #include <vector>
 #include <chrono>
-#include <SDL3/SDL_hints.h>
 #include "Texture.hpp"
 #include "AnimationHandler.hpp"
 #include "AudioHandler.hpp"
@@ -26,21 +20,12 @@
 #include "PipelineProgram.hpp"
 #include "TextRenderer.hpp"
 #include "SceneManager.hpp"
-#include "LevelScene.hpp"
 #include "UIScenes.hpp"
 #include "BackgroundRenderer.hpp"
 #include "JsonFileManager.hpp"
 #include "glm/gtx/string_cast.hpp"
-#include <cmath>
-#include <algorithm>
-#include "Sign.hpp"
-#include <SDL3/SDL_image.h>
-#include <SDL3/SDL_mixer.h>
-#include <glm/gtx/norm.hpp>
 #include <random>
-#include <glm/ext/matrix_transform.hpp>
 #include <glm/gtx/exterior_product.hpp>
-#include <numbers>
 
 struct State
 {

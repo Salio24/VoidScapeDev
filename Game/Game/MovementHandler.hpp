@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <chrono>
-#include "Sign.hpp"
 #include "Actor.hpp"
 #include "HelperStructs.hpp"
 

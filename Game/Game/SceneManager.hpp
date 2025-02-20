@@ -7,10 +7,8 @@
 #include "Input.hpp"
 #include "BackgroundRenderer.hpp"
 #include "AudioHandler.hpp"
-#include <format>
 #include "StateMachine.hpp"
 #include "TextRenderer.hpp"
-#include "JsonFileManager.hpp"
 
 class SceneManager {
 public:

@@ -1,7 +1,4 @@
 #pragma once
-#include <limits>
-#include <algorithm>
-#include <cmath>
 #include "HelperStructs.hpp"
 #include <glm/glm.hpp>
 #include "GameObject.hpp"
