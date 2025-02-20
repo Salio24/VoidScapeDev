@@ -1,0 +1,50 @@
+# Build artifacts
+/build/
+/bin/
+/Debug/
+/Release/
+
+# Libraries
+/include
+/src
+/lib
+
+# Compiled object files
+*.o
+*.obj
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Dynamic libraries
+*.dll
+*.so
+*.dylib
+
+# Static libraries
+*.lib
+*.a
+
+# Executable files
+*.exe
+*.out
+*.app
+
+# Debug and symbol files
+*.pdb
+*.dSYM/
+*.ilk
+
+# CMake-generated files (if using CMake)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# JetBrains Rider settings
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
