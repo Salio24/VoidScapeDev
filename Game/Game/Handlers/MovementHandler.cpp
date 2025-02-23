@@ -1,4 +1,5 @@
 #include "MovementHandler.hpp"
+#include "../Utilities/sign.hpp"
 
 MovementHandler::MovementHandler() {
 }
