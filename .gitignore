@@ -45,6 +45,11 @@ Makefile
 # JetBrains Rider settings
 .idea/
 
+# VS settings
+.vs/
+
 # OS-specific files
 .DS_Store
 Thumbs.db
+Game/Game/Game.vcxproj.user
+Game/Game/x64
