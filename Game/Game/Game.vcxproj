@@ -607,6 +607,7 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Graphics\Shaders\ShaderProgram.cpp" />
     <ClCompile Include="Graphics\Sprite.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1984,6 +1985,7 @@
     <ClInclude Include="Actors\GameEntity.hpp" />
     <ClInclude Include="Actors\GameObject.hpp" />
     <ClInclude Include="App.hpp" />
+    <ClInclude Include="Graphics\Shaders\ShaderProgram.hpp" />
     <ClInclude Include="Graphics\Sprite.hpp" />
     <ClInclude Include="Graphics\Texture.hpp" />
     <ClInclude Include="Handlers\AnimationHandler.hpp" />

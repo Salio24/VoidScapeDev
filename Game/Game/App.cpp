@@ -160,10 +160,10 @@ void App::PostStartUp() {
 
 	mCamera.SetProjectionMatrix();
 
-	mTextShaderProgram.CreateShaderProgram("shaders/vertexText.glsl", "shaders/fragmentText.glsl");
-	mGeneralShaderProgram.CreateShaderProgram("shaders/vertexGeneral.glsl", "shaders/fragmentGeneral.glsl");
-	mBackgroundShaderProgram.CreateShaderProgram("shaders/vertexBackground.glsl", "shaders/fragmentBackground.glsl");
-	mBackgroundFramebufferShaderProgram.CreateShaderProgram("shaders/vertexBackgroundFramebuffer.glsl", "shaders/fragmentBackgroundFramebuffer.glsl");
+	mTextShaderProgram.CreateShaderProgram("Graphics/Shaders/OpenGL/vertexText.glsl", "Graphics/Shaders/OpenGL/fragmentText.glsl");
+	mGeneralShaderProgram.CreateShaderProgram("Graphics/Shaders/OpenGL/vertexGeneral.glsl", "Graphics/Shaders/OpenGL/fragmentGeneral.glsl");
+	mBackgroundShaderProgram.CreateShaderProgram("Graphics/Shaders/OpenGL/vertexBackground.glsl", "Graphics/Shaders/OpenGL/fragmentBackground.glsl");
+	mBackgroundFramebufferShaderProgram.CreateShaderProgram("Graphics/Shaders/OpenGL/vertexBackgroundFramebuffer.glsl", "Graphics/Shaders/OpenGL/fragmentBackgroundFramebuffer.glsl");
 
 	mTextRenderer.Init((const char*)"assets/Fonts/PixelOperator8-Bold.ttf", 96);
 
