@@ -1,55 +1,47 @@
-# Build artifacts
-/build/
-/bin/
-/Debug/
-/Release/
-
-# Libraries
-/include
-/src
-/lib
-
-# Compiled object files
-*.o
-*.obj
-
-# Precompiled headers
-*.gch
+# Visual Studio files
+*.[Oo]bj
+*.user
+*.aps
 *.pch
-
-# Dynamic libraries
-*.dll
-*.so
-*.dylib
-
-# Static libraries
-*.lib
-*.a
-
-# Executable files
-*.exe
-*.out
-*.app
-
-# Debug and symbol files
-*.pdb
-*.dSYM/
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.[Cc]ache
 *.ilk
+*.log
+*.sbr
+*.sdf
+*.pyc
+ipch/
+obj/
+[Bb]in
+[Dd]ebug*/
+[Rr]elease*/
+Ankh.NoLoad
+*.TMP
+x64*/
+/Game/.scannerwork
+/Game/.vs/Game
+/Game/bw-output
+/Game/.git.7z
 
-# CMake-generated files (if using CMake)
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-
-# JetBrains Rider settings
-.idea/
-
-# VS settings
-.vs/
-
-# OS-specific files
-.DS_Store
-Thumbs.db
-Game/Game/Game.vcxproj.user
-Game/Game/x64
+/Game/ForPresentation.cpp
+/Game/main_old.cpp
+/Game/msbuild.binlog
+/Game/olcPixelGameEngine.h
+/Game/OneLoneCoder_PGE_Rectangles.cpp
+/Game/RenderHandler.cpp
+/include
+/lib
+/src
+/Game.7z
+/New Text Document.txt
+/oldRenderer.7z
+/.gitignore
+/.gitignore
