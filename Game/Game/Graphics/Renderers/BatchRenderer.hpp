@@ -3,11 +3,9 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include "glm/gtx/string_cast.hpp"
-#include "../Graphics/Shaders/ShaderProgram.hpp"
-#include "../Utilities/HelperStructs.hpp"
+#include "../Shaders/ShaderProgram.hpp"
+#include "../../Utilities/HelperStructs.hpp"
 #include <cstddef>
-
-class App;
 
 class BatchRenderer {
 public:
@@ -30,9 +28,6 @@ public:
 	void DrawInBatch(const glm::vec2 position, const glm::vec2 size, uint32_t textureID, const glm::vec2 textureSize, const glm::vec2 texturePosition = glm::vec2(0.0f, 0.0f), const float rotationAnlge = 0.0f, const float anlgeModifier = 1.0f, const bool drawFliped = false, const glm::vec4& color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 private:
-	App* app_;
-
-	App& app();
 
 	uint32_t indexCount{ 0 };
 

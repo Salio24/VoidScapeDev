@@ -2,7 +2,7 @@
 #include "GameEntity.hpp"
 #include <glm/vec2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../Handlers/CollisionHandler.hpp"
+#include "../Physics/CollisionHandler.hpp"
 
 enum class MovementDirection {
 	None,

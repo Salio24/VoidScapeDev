@@ -1,9 +1,9 @@
 #pragma once
 #include "../Actors/Actor.hpp"
 #include <glm/glm.hpp>
-#include "../Handlers/MovementHandler.hpp"
-#include "../Handlers/AnimationHandler.hpp"
-#include "../Handlers/AudioHandler.hpp"
+#include "../Physics/MovementHandler.hpp"
+#include "../Graphics/AnimationHandler.hpp"
+#include "../Utilities/AudioHandler.hpp"
 
 enum class PlayerStates {
 	RUNNING,

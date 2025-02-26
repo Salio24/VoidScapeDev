@@ -1,14 +1,15 @@
 #pragma once
 #include <string>
-#include "../Actors/GameObject.hpp"
+#include "../../Actors/GameObject.hpp"
 #include "UIScenes.hpp"
 #include "LevelScene.hpp"
 #include <SDL3/SDL_mixer.h>
-#include "Input.hpp"
-#include "../Renderers/BackgroundRenderer.hpp"
-#include "../Handlers/AudioHandler.hpp"
-#include "StateMachine.hpp"
-#include "../Renderers/TextRenderer.hpp"
+#include "../../Utilities/Input.hpp"
+#include "../../Graphics/Renderers/BackgroundRenderer.hpp"
+#include "../../Utilities/AudioHandler.hpp"
+#include "../StateMachine.hpp"
+#include "../../Graphics/Renderers/TextRenderer.hpp"
+#include "../../Utilities/JsonFileManager.hpp"
 
 class SceneManager {
 public:

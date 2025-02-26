@@ -1,31 +1,31 @@
 #pragma once
 #include <SDL3/SDL.h>
-#include "Utilities/Camera.hpp"
+#include "Graphics/Camera.hpp"
 #include <glad/glad.h>
 #include "Utilities/Input.hpp"
 #include <glm/glm.hpp>
 #include "Actors/Actor.hpp"
-#include "Renderers/BatchRenderer.hpp"
+#include "Graphics/Renderers/BatchRenderer.hpp"
 #include "Utilities/HelperStructs.hpp"
-#include "Handlers/MovementHandler.hpp"
+#include "Physics/MovementHandler.hpp"
 #include <vector>
 #include <chrono>
 #include "Graphics/Texture.hpp"
-#include "Handlers/AnimationHandler.hpp"
-#include "Handlers/AudioHandler.hpp"
+#include "Graphics/AnimationHandler.hpp"
+#include "Utilities/AudioHandler.hpp"
 #include "Actors/BlackHole.hpp"
-#include "Utilities/StateMachine.hpp"
+#include "InternalLogic/StateMachine.hpp"
 #include "Actors/EscapePortal.hpp"
 #include "Graphics/Shaders/ShaderProgram.hpp"
-#include "Utilities/PipelineProgram.hpp"
-#include "Renderers/TextRenderer.hpp"
-#include "Utilities/SceneManager.hpp"
-#include "Renderers/BackgroundRenderer.hpp"
+#include "Graphics/PipelineProgram.hpp"
+#include "Graphics/Renderers/TextRenderer.hpp"
+#include "InternalLogic/Scenes/SceneManager.hpp"
+#include "Graphics/Renderers/BackgroundRenderer.hpp"
 #include "Utilities/JsonFileManager.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include <random>
 #include <glm/gtx/exterior_product.hpp>
-#include "Utilities/PhysicsComponent.hpp"
+#include "Physics/PhysicsComponent.hpp"
 
 //struct State
 //{
@@ -148,18 +148,4 @@ private:
 
 	SDL_Window* mWindow     { nullptr };
 	SDL_GLContext mGlContext{ nullptr };
-
-	double accumulator = 0.0;
-
-	State previous;
-	State current;
-
-	double t = 0.0;
-	double dt = 1.0f / 60.0f;
-
-	Derivative evaluate(const State& initial, double t, float dt, const Derivative& d);
-
-	float acceleration(const State& state, double t);
-
-	void integrate(State& state, double t, float dt);
 };

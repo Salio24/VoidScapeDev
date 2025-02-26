@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
-#include "HelperStructs.hpp"
-#include "..//Renderers/BatchRenderer.hpp"
-#include "../Actors/GameObject.hpp"
+#include "../../Utilities/HelperStructs.hpp"
+#include "../../Graphics/Renderers/BatchRenderer.hpp"
+#include "../../Actors/GameObject.hpp"
 #include <SDL3/SDL_mixer.h>
 #include <vector>
 #include <random>

@@ -1,10 +1,10 @@
 #pragma once
 #define GLM_ENABLE_EXPERIMENTAL
 #include "GameObject.hpp"
-#include "../Handlers/AnimationHandler.hpp"
+#include "../Graphics/AnimationHandler.hpp"
 #include "glm/glm.hpp"
 #include "Actor.hpp"
-#include "../Handlers/CollisionHandler.hpp"
+#include "../Physics/CollisionHandler.hpp"
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/exterior_product.hpp>
 #include <SDL3/SDL_mixer.h>
