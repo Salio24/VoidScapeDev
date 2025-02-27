@@ -607,6 +607,7 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Graphics\Shaders\ShaderProgram.cpp" />
     <ClCompile Include="Graphics\Sprite.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1984,6 +1985,7 @@
     <ClInclude Include="Actors\GameEntity.hpp" />
     <ClInclude Include="Actors\GameObject.hpp" />
     <ClInclude Include="App.hpp" />
+    <ClInclude Include="Graphics\Shaders\ShaderProgram.hpp" />
     <ClInclude Include="Graphics\Sprite.hpp" />
     <ClInclude Include="Graphics\Texture.hpp" />
     <ClInclude Include="Handlers\AnimationHandler.hpp" />
@@ -2004,6 +2006,16 @@
     <ClInclude Include="Utilities\Sign.hpp" />
     <ClInclude Include="Utilities\StateMachine.hpp" />
     <ClInclude Include="Utilities\UIScenes.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Graphics\Shaders\OpenGL\fragmentBackground.glsl" />
+    <Content Include="Graphics\Shaders\OpenGL\fragmentBackgroundFramebuffer.glsl" />
+    <Content Include="Graphics\Shaders\OpenGL\fragmentGeneral.glsl" />
+    <Content Include="Graphics\Shaders\OpenGL\fragmentText.glsl" />
+    <Content Include="Graphics\Shaders\OpenGL\vertexBackground.glsl" />
+    <Content Include="Graphics\Shaders\OpenGL\vertexBackgroundFramebuffer.glsl" />
+    <Content Include="Graphics\Shaders\OpenGL\vertexGeneral.glsl" />
+    <Content Include="Graphics\Shaders\OpenGL\vertexText.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
