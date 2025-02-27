@@ -3,6 +3,7 @@
 /bin/
 /Debug/
 /Release/
+/x64
 
 # Libraries
 /include
