@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <map>
 #include <glad/glad.h>
-#include "../Graphics/Shaders/ShaderProgram.hpp"
+#include "../Shaders/ShaderProgram.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include FT_FREETYPE_H
 

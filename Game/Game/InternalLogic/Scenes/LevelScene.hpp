@@ -1,7 +1,7 @@
 #pragma once 
 #include <string>
 #include <nlohmannjson/json.hpp>
-#include "../Actors/GameObject.hpp"
+#include "../../Actors/GameObject.hpp"
 #include <vector>
 
 class LevelScene {

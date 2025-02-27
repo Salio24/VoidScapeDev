@@ -4,13 +4,13 @@
 #include "GameObject.hpp"
 #include <random>
 #include <vector>
-#include "../Handlers/CollisionHandler.hpp"
+#include "../Physics/CollisionHandler.hpp"
 #include "Actor.hpp"
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/exterior_product.hpp>
-#include "../Handlers/AnimationHandler.hpp"
+#include "../Graphics/AnimationHandler.hpp"
 #include <SDL3/SDL_mixer.h>
-#include "../Utilities//StateMachine.hpp"
+#include "../InternalLogic/StateMachine.hpp"
 
 class BlackHole : public GameObject {
 public:

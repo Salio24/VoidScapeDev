@@ -1,9 +1,9 @@
 #pragma once
 #include <glad/glad.h>
-#include "../Utilities/HelperStructs.hpp"
-#include "../Graphics/Shaders/ShaderProgram.hpp"
+#include "../../Utilities/HelperStructs.hpp"
+#include "../Shaders/ShaderProgram.hpp"
 #include <SDL3/SDL.h>
-#include "../Graphics/Texture.hpp"
+#include "../Texture.hpp"
 
 struct LevelBackgroundLayer {
 	Box b1;

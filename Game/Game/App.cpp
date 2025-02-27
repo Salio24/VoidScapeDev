@@ -160,10 +160,10 @@ void App::PostStartUp() {
 
 	mCamera.SetProjectionMatrix();
 
-	mTextShaderProgram.CreateShaderProgram("shaders/vertexText.glsl", "shaders/fragmentText.glsl");
-	mGeneralShaderProgram.CreateShaderProgram("shaders/vertexGeneral.glsl", "shaders/fragmentGeneral.glsl");
-	mBackgroundShaderProgram.CreateShaderProgram("shaders/vertexBackground.glsl", "shaders/fragmentBackground.glsl");
-	mBackgroundFramebufferShaderProgram.CreateShaderProgram("shaders/vertexBackgroundFramebuffer.glsl", "shaders/fragmentBackgroundFramebuffer.glsl");
+	mTextShaderProgram.CreateShaderProgram("Graphics/Shaders/vertex/vertexText.glsl", "Graphics/Shaders/fragment/fragmentText.glsl");
+	mGeneralShaderProgram.CreateShaderProgram("Graphics/Shaders/vertex/vertexGeneral.glsl", "Graphics/Shaders/fragment/fragmentGeneral.glsl");
+	mBackgroundShaderProgram.CreateShaderProgram("Graphics/Shaders/vertex/vertexBackground.glsl", "Graphics/Shaders/fragment/fragmentBackground.glsl");
+	mBackgroundFramebufferShaderProgram.CreateShaderProgram("Graphics/Shaders/vertex/vertexBackgroundFramebuffer.glsl", "Graphics/Shaders/fragment/fragmentBackgroundFramebuffer.glsl");
 
 	mTextRenderer.Init((const char*)"assets/Fonts/PixelOperator8-Bold.ttf", 96);
 
@@ -322,190 +322,9 @@ void App::ReloadConfig() {
 	mConfig = JsonManager::loadConfig();
 }
 
-// 3 functions below are for RK4 algorithm 
-Derivative App::evaluate(const State& initial,
-	double t,
-	float dt,
-	const Derivative& d)
-{
-	State state;
-	state.x = initial.x + d.dx * dt;
-	state.v = initial.v + d.dv * dt;
-
-	Derivative output;
-	output.dx = state.v;
-	output.dv = acceleration(state, t + dt);
-	return output;
-}
-
-float App::acceleration(const State& state, double t)
-{
-	//const float k = 15.0f;
-	//const float b = 0.1f;
-	//return -k * state.x - b * state.v;
-	float nextPos = state.x + state.v;
-	return nextPos - state.x;
-
-}
-
-void App::integrate(State& state,
-	double t,
-	float dt)
-{
-	Derivative a, b, c, d;
-
-	a = evaluate(state, t, 0.0f, Derivative());
-	b = evaluate(state, t, dt * 0.5f, a);
-	c = evaluate(state, t, dt * 0.5f, b);
-	d = evaluate(state, t, dt, c);
-
-	float dxdt = 1.0f / 6.0f * (a.dx + 2.0f * (b.dx + c.dx) + d.dx);
-
-	float dvdt = 1.0f / 6.0f * (a.dv + 2.0f * (b.dv + c.dv) + d.dv);
-
-	state.x = state.x + dxdt * dt;
-	state.v = state.v + dvdt * dt;
-}
-
 void App::UpdatePlayground(float deltaTime) {
 
-	static float last = 0.0f;
-	//last = pos.y;
-
-
-	static float lowest = 1000.0f;
-	static float highest = 0.0f;
-
-	static float avg = 0.0f;
-	static double avgBuffer = 0.0f;
-
-	static double deltaTimeBuffer = 0.0f;
-	static float avgDeltaTime = 0.0f;
-
-	static float elapsedTime = 0.0f;
-	static int elapsedFrames = 0;
-
-	static int iterations = 0;
-
-	static glm::vec2 vel = glm::vec2(0.0f);
-	static glm::vec2 pos = glm::vec2(0.0f, 800.0f);
-
-	glm::vec2 acceleration = glm::vec2(1000.0f, -1000.0f);
-
-	static int add = 0;
-
-	static auto lastTime = std::chrono::high_resolution_clock::now();
-	auto currentTime = std::chrono::high_resolution_clock::now();
-
-	if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count() == 1) {
-		//std::cout << add << std::endl;
-		add = 0;
-		lastTime = currentTime;
-	}
-
-	float speed = 1.0f;
-
-	//static auto currentT = std::chrono::high_resolution_clock::now();
-	//auto newT = std::chrono::high_resolution_clock::now();
-	//
-	//std::chrono::duration<double> elapsedT = newT - currentT;
-	//
-	//currentT = newT;
-	//
-	//static double deltaT = 0.0f;
-	//
-	//deltaT = elapsedT.count();
-	//
-	//if (deltaT > 0.25f) {
-	//	deltaT = 0.25f;
-	//}
-	//
-	//accumulator += deltaT;
-
-	current.v = testSpeeed;
-
-	while (accumulator >= dt) {
-		previous = current;
-
-		integrate(current, t, dt);
-		t += dt;
-		accumulator -= dt;
-
-		add++;
-
-		if (pos.y > 0) {
-			// semi-implicit euler
-			//vel += acceleration * deltaTime;
-			//pos += vel * deltaTime;
-
-			vel += glm::vec2(speed, -speed);
-			pos += vel;
-
-			// velocity verlet
-			//pos += vel * deltaTime + 0.5f * acceleration * deltaTime * deltaTime;
-			//vel += acceleration * deltaTime;
-
-			elapsedTime += deltaTime;
-			elapsedFrames++;
-		}
-		else {
-			if (pos.x > highest) {
-				highest = pos.x;
-			}
-			if (pos.x < lowest) {
-				lowest = pos.x;
-			}
-			avgBuffer += pos.x;	
-			iterations++;
-			avg = avgBuffer / (float)iterations;
-
-			float avgD = elapsedTime / (float)elapsedFrames;
-			deltaTimeBuffer += avgD;
-			avgDeltaTime = deltaTimeBuffer / (float)iterations;
-
-			elapsedFrames = 0;
-			elapsedTime = 0.0f;
-
-			pos = glm::vec2(0.0f, 800.0f);
-			vel = glm::vec2(0.0f);
-		}
-
-	}
-
-	const double alpha = accumulator / dt;
-
-	State state;
-
-	state.x = current.x * alpha + previous.x * (1.0f - alpha);
-	state.v = current.v * alpha + previous.v * (1.0f - alpha);
 	
-	//std::cout << "Pos: " << state.x << " Speed: " << state.v << std::endl;
-
-	if (iterations == 200) {
-		//std::cout << "AvgPos: " << avg << " LowestPos: " << lowest << " HighestPos: " << highest << " Iterations: " << iterations << " DeltaPos: " << highest - lowest <<  " AvgDeltaTime: " << avgDeltaTime << std::endl;
-	}
-
-	if (testReset) {
-		lowest = 1000.0f;
-		highest = 0.0f;
-		last = 0.0f;
-
-		avg = 0.0f;
-		avgBuffer = 0.0f;
-
-		deltaTimeBuffer = 0.0f;
-		avgDeltaTime = 0.0f;
-
-		elapsedTime = 0.0f;
-		elapsedFrames = 0;
-
-		iterations = 0;
-
-		vel = glm::vec2(0.0f);
-		pos = glm::vec2(0.0f, 800.0f);
-
-		testReset = false;
-	}
 
 	static auto currentT = std::chrono::high_resolution_clock::now();
 	auto newT = std::chrono::high_resolution_clock::now();
@@ -522,9 +341,7 @@ void App::UpdatePlayground(float deltaTime) {
 		deltaT = 0.25f;
 	}
 
-	mPhysicsComponent.mAccumulator += deltaT;
-
-	mPhysicsComponent.FixedTickrateUpdate();
+	mPhysicsComponent.FixedTickrateUpdate(deltaT);
 
 	//std::cout << glm::to_string(mPhysicsComponent.testV) << std::endl;
 

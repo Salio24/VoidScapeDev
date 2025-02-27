@@ -1,19 +1,11 @@
 #include "BatchRenderer.hpp"
-#include "../App.hpp"
 
-BatchRenderer::BatchRenderer() : app_(nullptr) {
+BatchRenderer::BatchRenderer() {
 
 }
 
 BatchRenderer::~BatchRenderer() {
 
-}
-
-App& BatchRenderer::app()  {
-	if (app_ == nullptr) {
-		app_ = &App::getInstance();
-	}
-	return *app_;
 }
 void BatchRenderer::StartUp(ShaderProgram* program, GLuint& PipelineProgramID) {
 	if (QuadBuffer != nullptr) {
