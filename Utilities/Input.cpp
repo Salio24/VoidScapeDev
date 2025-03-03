@@ -65,13 +65,17 @@ void InputManager::Input() {
 			if (e.key.scancode == mControls.JUMP_KEY_BIND) {
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::SPACE)] = false;
 				app().mMovementHandler.mSpacebarOneShot = true;
+				app().mPhysicsComponent.testButton1 = false;
 			} else if (e.key.scancode == mControls.DUCK_KEY_BIND) {
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::DUCK)] = false;
 				app().mMovementHandler.mDuckOneShot = true;
+				app().mPhysicsComponent.testButton2 = false;
 			} else if (e.key.scancode == mControls.LEFT_KEY_BIND) {
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_LEFT)] = false;
+				app().mPhysicsComponent.testButton3 = false;
 			} else if (e.key.scancode == mControls.RIGHT_KEY_BIND) {
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_RIGHT)] = false;
+				app().mPhysicsComponent.testButton4 = false;
 			} 
 			else if (e.key.scancode == SDL_SCANCODE_MINUS) {
 				ones1 = true;
@@ -84,15 +88,19 @@ void InputManager::Input() {
 		const bool* state = SDL_GetKeyboardState(nullptr);
 		if (state[mControls.JUMP_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::SPACE)] = true;
+			app().mPhysicsComponent.testButton1 = true;
 		}
 		if (state[mControls.DUCK_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::DUCK)] = true;
+			app().mPhysicsComponent.testButton2 = true;
 		}
 		if (state[mControls.LEFT_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_LEFT)] = true;
+			app().mPhysicsComponent.testButton3 = true;
 		}
 		if (state[mControls.RIGHT_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_RIGHT)] = true;
+			app().mPhysicsComponent.testButton4 = true;
 		}
 		if (app().mSettings.debugMode) {
 			if (state[SDL_SCANCODE_T]) {
@@ -103,7 +111,6 @@ void InputManager::Input() {
 			}
 			if (state[SDL_SCANCODE_Y]) {
 				app().testReset = true;
-				app().mPhysicsComponent.nulify();
 			}
 			if (state[SDL_SCANCODE_K]) {
 				app().mPhysicsComponent.testV += glm::vec2(1.0f, 1.0f) * 5.0f;

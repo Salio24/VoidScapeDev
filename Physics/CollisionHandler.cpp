@@ -1,5 +1,7 @@
 #include "CollisionHandler.hpp"
 #include "../Actors//Actor.hpp"
+#include <iostream> // debug
+
 
 bool PointVsRect(const glm::vec2& point, const glm::vec2& boxSize, const glm::vec2& boxPos)
 {
@@ -158,8 +160,7 @@ void CollisionUpdate(const std::vector<GameObject>* blocks, Actor& actor, bool& 
 	glm::vec2 A(actor.mPosition.x - 3 * actor.mSprite.mVertexData.Size.x, actor.mPosition.y - 3 * actor.mSprite.mVertexData.Size.y);
 	// Top right corner of broad-phase-box
 	glm::vec2 B(actor.mPosition.x + 4 * actor.mSprite.mVertexData.Size.x, actor.mPosition.y + 4 * actor.mSprite.mVertexData.Size.y);
-
-
+	
 	// use normals for those as well
 	LeftWallHug   = false;
 	RightWallHug  = false;

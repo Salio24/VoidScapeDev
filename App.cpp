@@ -341,13 +341,23 @@ void App::UpdatePlayground(float deltaTime) {
 		deltaT = 0.25f;
 	}
 
-	mPhysicsComponent.FixedTickrateUpdate(deltaT);
+	mPhysicsComponent.FixedTickrateUpdate(deltaT, mSceneManager.mCurrentBlocks);
 
 	//std::cout << glm::to_string(mPhysicsComponent.testV) << std::endl;
 
 	for (int i = 0; i < 12000; i++) {
-		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.future.position, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
 	}
+	static glm::mat4 ttt = glm::mat4(1.0f);
+		
+	mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.mInterpolatedState.position, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &ttt);
+
+
+	for (int i = 0; i < mPhysicsComponent.collBlocks.size(); i++) {
+		mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.collBlocks[i], glm::vec2(18.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &ttt);
+	}
+
+
+	//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.testPos, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
 		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), pos, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
 		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), glm::vec2(state.x, 800.0f), glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, & mCamera.mUIModelMatrix);
 	//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.pos, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
@@ -530,6 +540,9 @@ void App::Update() {
 			else if (mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position.x + mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Size.x > (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x - 80.0f)
 				&& mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position.x < (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x + 2000.0f) && mSceneManager.mCurrentBlocks->at(i).mIsVisible == true && mSceneManager.mCurrentBlocks->at(i).mIsSucked == true) {
 				flyingBlocks.push_back(i);
+			}
+			if (mSceneManager.mCurrentBlocks->at(i).mIsCollidable) {
+				//mBatchRenderer.DrawInBatch(mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Position, mSceneManager.mCurrentBlocks->at(i).mSprite.mVertexData.Size, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 			}
 		}
 
