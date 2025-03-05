@@ -70,6 +70,10 @@ private:
 	PhysicsState previous;
 	PhysicsState current;
 
+	glm::vec2 normal;
+	glm::vec2 fric;
+
+
 	glm::vec2 colAcc{ 0.0f };
 
 };

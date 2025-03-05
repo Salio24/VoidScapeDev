@@ -30,20 +30,22 @@ glm::vec2 PhysicsComponent::RK4_AccelerationVec2(const PhysicsState& state, doub
 
 	accF = glm::vec2(0.0f, 0.0f);
 
-	//accF += glm::vec2(0.0f, -10.0f);
+	accF += glm::vec2(0.0f, -150.0f);
 
 	if (testButton1) {
-		accF += glm::vec2(0.0f, 100.0f);
+		accF += glm::vec2(0.0f, 1000.0f);
 	}
-	if (testButton3) {
-		accF += glm::vec2(-80.0f, 0.0f);
+	if (testButton3 && state.velocity.x > -300.f) {
+		accF += glm::vec2(-600.0f, 0.0f);
 	}
-	if (testButton4) {
-		accF += glm::vec2(80.0f, 0.0f);
+	if (testButton4 && state.velocity.x < 300.f) {
+		accF += glm::vec2(600.0f, 0.0f);
 	}
 	if (testButton2) {
-		accF += glm::vec2(0.0f, -100.0f);
+		accF += glm::vec2(0.0f, -1000.0f);
 	}
+
+	accF += fric;
 
 	return accF;
 }
@@ -71,6 +73,26 @@ void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<G
 	accumulator += deltaTime;
 
 	while (accumulator >= timeStep) {
+
+
+
+		bool isInputApplied = testButton3 || testButton4;
+
+		fric = glm::vec2(0.0f);
+		if (normal.y == 1) { // On ground
+			if (!isInputApplied && std::abs(current.velocity.x) < 10.0f) {
+				// No input: stop the object when velocity is below threshold
+				fric.x = -current.velocity.x / timeStep;
+			}
+			else if (std::abs(current.velocity.x) > 0.0f) {
+				// Moving with or without input: apply constant friction
+				fric.x = -80.0f * glm::normalize(current.velocity).x;
+			}
+		}
+
+
+
+
 		previous = current;
 		RK4_IntegrateVec2(current, time, timeStep);
 		CUpdate(blocks, previous.position, current.position, current.velocity, timeStep);
@@ -79,11 +101,16 @@ void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<G
 		accumulator -= timeStep;
 	}
 
+
 	const double alpha = accumulator / timeStep;
 
 	mInterpolatedState.position = MultiplyVec2AndDouble(current.position, alpha) + MultiplyVec2AndDouble(previous.position, (1.0f - alpha));
 	mInterpolatedState.velocity = MultiplyVec2AndDouble(current.velocity, alpha) + MultiplyVec2AndDouble(previous.velocity, (1.0f - alpha));
 
+	std::cout << glm::to_string(current.velocity) << glm::to_string(mInterpolatedState.position) << std::endl;
+
+
+	//std::cout << glm::to_string(normal) << std::endl;
 }
 
 bool PhysicsComponent::RayVsRectT(const glm::vec2& rayOrigin, const glm::vec2& rayDirection, const Box* target, glm::vec2& contactPoint, glm::vec2& contactNormal, float& hitTimeNear)
@@ -205,14 +232,13 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 	glm::vec2 contactPoint, contactNormal;
 	float contactTime = 0.0f;
 	std::vector<std::pair<int, float>> collidedBlocks;
-	glm::vec2 dynamicBoxVelocity = (currentPos - previousPos) / (float)timeStep; // Average velocity for collision detection
+	glm::vec2 dynamicBoxVelocity = (currentPos - previousPos) / (float)timeStep; 
 
-	// Detect collisions along the path from previousPos to currentPos
 	for (int i = 0; i < blocks->size(); i++) {
 		if (!blocks->at(i).mIsDeathTrigger && blocks->at(i).mIsCollidable) {
 			if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(i).mSprite.mVertexData, dynamicBoxVelocity, contactPoint, contactNormal, contactTime, previousPos)) {
 				collidedBlocks.push_back({ i, contactTime });
-				collBlocks.push_back(blocks->at(i).mSprite.mVertexData.Position);
+				//collBlocks.push_back(blocks->at(i).mSprite.mVertexData.Position);
 
 			}
 		}
@@ -223,9 +249,9 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 		});
 
 	glm::vec2 totalImpulse = glm::vec2(0.0f);
-	std::set<float> resolvedNormalsX; // Tracks which normals have been handled
+	std::set<float> resolvedNormalsX;
 
-	std::set<float> resolvedNormalsY; // Tracks which normals have been handled
+	std::set<float> resolvedNormalsY; 
 
 	float earliestTime = 1.0f;
 
@@ -236,12 +262,12 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 		glm::vec2 cp, cn;
 		float ct = 0;
 	
+
 		if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(j.first).mSprite.mVertexData, dynamicBoxVelocity, cp, cn, ct, previousPos)) {
 			if (!resolvedNormalsX.contains(cn.x) && !resolvedNormalsY.contains(cn.y)) {
 				float vRel = glm::dot(velocity, cn);
-				if (cn.x != 0 && cn.y != 1) {
-					std::cout << "vRel: " << vRel << ", Velocity: (" << current.velocity.x << ", " << current.velocity.y << "), Normal: (" << cn.x << ", " << cn.y << ")" << std::endl;
-				}
+				//std::cout << "vRel: " << vRel << ", Velocity: (" << current.velocity.x << ", " << current.velocity.y << "), Normal: (" << cn.x << ", " << cn.y << ")" << std::endl;
+				
 				if (vRel < 0) {
 					float restitution = 0.0f; // Adjust as needed
 					float jMag = -(1.0f + restitution) * vRel;
@@ -266,15 +292,13 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 
 	// Apply total impulse to velocity
 
-	// see last grok response 
-
-	if (totalImpulse.y > 0 && totalImpulse.x != 0) {
-		std::cout << "Total Impulse: " << glm::to_string(totalImpulse) << std::endl;
+	if (totalImpulse.y != 0 || totalImpulse.x != 0) {
+		//std::cout << "Total Impulse: " << glm::to_string(totalImpulse) << std::endl;
 	}
 
 	if (resolvedNormalsX.size() > 0 || resolvedNormalsY.size()> 0) {
 		//currentPos = previousPos + dynamicBoxVelocity * (float)timeStep * earliestTime;
-		velocity += totalImpulse;
+		//velocity += totalImpulse;
 
 	}
 
@@ -283,6 +307,11 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 }
 
 void PhysicsComponent::ResolvePenetration(const std::vector<GameObject>* blocks, glm::vec2& position, glm::vec2& velocity, glm::vec2 size) {
+
+	normal = glm::vec2(0.0f);
+
+	
+
 	for (const auto& block : *blocks) {
 		if (!block.mIsDeathTrigger && block.mIsCollidable) {
 			// AABB bounds: character
@@ -296,34 +325,39 @@ void PhysicsComponent::ResolvePenetration(const std::vector<GameObject>* blocks,
 			float overlapX = std::min(maxA.x, maxB.x) - std::max(minA.x, minB.x);
 			float overlapY = std::min(maxA.y, maxB.y) - std::max(minA.y, minB.y);
 
-			// Check if there’s an overlap
 			if (overlapX > 0 && overlapY > 0) {
 				// Resolve along the axis with the smallest penetration
 				if (overlapX < overlapY) {
 					// Resolve along X-axis
 					if (minA.x < minB.x) {
 						position.x -= overlapX; // Move left
-						if (velocity.x > 0) velocity.x = 0; // Stop rightward motion
+						normal.x = -1.0f;
+						if (velocity.x > 0) velocity.x = 0; 
 					}
 					else {
 						position.x += overlapX; // Move right
-						if (velocity.x < 0) velocity.x = 0; // Stop leftward motion
+						normal.x = 1.0f;
+						if (velocity.x < 0) velocity.x = 0; 
 					}
 				}
 				else {
 					// Resolve along Y-axis
 					if (minA.y < minB.y) {
-						position.y -= overlapY; // Move down (unlikely, but included for completeness)
+						position.y -= overlapY; // Move down 
+						normal.y = -1.0f;
 						if (velocity.y > 0) velocity.y = 0;
 					}
 					else {
 						position.y += overlapY; // Move up
-						if (velocity.y < 0) velocity.y = 0; // Stop downward motion
+						normal.y = 1.0f;
+						if (velocity.y < 0) velocity.y = 0; 
 					}
 				}
 			}
 		}
 	}
+
+	// add trigger handling, 
 }
 
 /*
