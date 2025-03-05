@@ -44,6 +44,8 @@ public:
 
 	void CUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep);
 
+	void ResolvePenetration(const std::vector<GameObject>* blocks, glm::vec2& position, glm::vec2& velocity, glm::vec2 size);
+
 	glm::vec2 testV{ 0.0f };
 	PhysicsState mInterpolatedState;
 

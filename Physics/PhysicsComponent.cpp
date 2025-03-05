@@ -23,7 +23,6 @@ Derivative PhysicsComponent::RK4_EvaluateVec2(PhysicsState& initial, double time
 	output.PositionDerivative = state.velocity;
 	output.VelocityDerivative = RK4_AccelerationVec2(state, timeStep);
 
-
 	return output;
 }
 
@@ -31,7 +30,7 @@ glm::vec2 PhysicsComponent::RK4_AccelerationVec2(const PhysicsState& state, doub
 
 	accF = glm::vec2(0.0f, 0.0f);
 
-	accF += glm::vec2(0.0f, -10.0f);
+	//accF += glm::vec2(0.0f, -10.0f);
 
 	if (testButton1) {
 		accF += glm::vec2(0.0f, 100.0f);
@@ -45,7 +44,6 @@ glm::vec2 PhysicsComponent::RK4_AccelerationVec2(const PhysicsState& state, doub
 	if (testButton2) {
 		accF += glm::vec2(0.0f, -100.0f);
 	}
-
 
 	return accF;
 }
@@ -200,6 +198,10 @@ bool PhysicsComponent::ResolveDynamicRectVsRectT(const glm::vec2& size, const fl
 
 
 void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep) {
+
+	ResolvePenetration(blocks, currentPos, velocity, glm::vec2(40.0f));
+
+
 	glm::vec2 contactPoint, contactNormal;
 	float contactTime = 0.0f;
 	std::vector<std::pair<int, float>> collidedBlocks;
@@ -208,7 +210,7 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 	// Detect collisions along the path from previousPos to currentPos
 	for (int i = 0; i < blocks->size(); i++) {
 		if (!blocks->at(i).mIsDeathTrigger && blocks->at(i).mIsCollidable) {
-			if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(i).mSprite.mVertexData, velocity, contactPoint, contactNormal, contactTime, currentPos)) {
+			if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(i).mSprite.mVertexData, dynamicBoxVelocity, contactPoint, contactNormal, contactTime, previousPos)) {
 				collidedBlocks.push_back({ i, contactTime });
 				collBlocks.push_back(blocks->at(i).mSprite.mVertexData.Position);
 
@@ -216,10 +218,8 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 		}
 	}
 
-	// Sort by contact time
-	std::sort(collidedBlocks.begin(), collidedBlocks.end(),
-		[](const std::pair<int, float>& a, const std::pair<int, float>& b) {
-			return a.second < b.second;
+	std::sort(collidedBlocks.begin(), collidedBlocks.end(), [](const std::pair<int, float>& a, const std::pair<int, float>& b) {
+		return a.second < b.second;
 		});
 
 	glm::vec2 totalImpulse = glm::vec2(0.0f);
@@ -236,10 +236,12 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 		glm::vec2 cp, cn;
 		float ct = 0;
 	
-		if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(j.first).mSprite.mVertexData, velocity, cp, cn, ct, currentPos)) {
+		if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(j.first).mSprite.mVertexData, dynamicBoxVelocity, cp, cn, ct, previousPos)) {
 			if (!resolvedNormalsX.contains(cn.x) && !resolvedNormalsY.contains(cn.y)) {
 				float vRel = glm::dot(velocity, cn);
-				std::cout << "vRel: " << vRel << ", Velocity: (" << current.velocity.x << ", " << current.velocity.y << "), Normal: (" << cn.x << ", " << cn.y << ")" << std::endl;
+				if (cn.x != 0 && cn.y != 1) {
+					std::cout << "vRel: " << vRel << ", Velocity: (" << current.velocity.x << ", " << current.velocity.y << "), Normal: (" << cn.x << ", " << cn.y << ")" << std::endl;
+				}
 				if (vRel < 0) {
 					float restitution = 0.0f; // Adjust as needed
 					float jMag = -(1.0f + restitution) * vRel;
@@ -266,18 +268,63 @@ void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 
 
 	// see last grok response 
 
-	if (totalImpulse.y > 0) {
+	if (totalImpulse.y > 0 && totalImpulse.x != 0) {
 		std::cout << "Total Impulse: " << glm::to_string(totalImpulse) << std::endl;
 	}
 
 	if (resolvedNormalsX.size() > 0 || resolvedNormalsY.size()> 0) {
-		currentPos = previousPos + dynamicBoxVelocity * (float)timeStep * earliestTime;
+		//currentPos = previousPos + dynamicBoxVelocity * (float)timeStep * earliestTime;
 		velocity += totalImpulse;
 
 	}
 
+	//ResolvePenetration(blocks, currentPos, velocity, glm::vec2(40.0f));
+
 }
 
+void PhysicsComponent::ResolvePenetration(const std::vector<GameObject>* blocks, glm::vec2& position, glm::vec2& velocity, glm::vec2 size) {
+	for (const auto& block : *blocks) {
+		if (!block.mIsDeathTrigger && block.mIsCollidable) {
+			// AABB bounds: character
+			glm::vec2 minA = position;
+			glm::vec2 maxA = position + size;
+			// AABB bounds: static block
+			glm::vec2 minB = block.mSprite.mVertexData.Position;
+			glm::vec2 maxB = minB + block.mSprite.mVertexData.Size;
+
+			// Calculate overlap in each axis
+			float overlapX = std::min(maxA.x, maxB.x) - std::max(minA.x, minB.x);
+			float overlapY = std::min(maxA.y, maxB.y) - std::max(minA.y, minB.y);
+
+			// Check if there’s an overlap
+			if (overlapX > 0 && overlapY > 0) {
+				// Resolve along the axis with the smallest penetration
+				if (overlapX < overlapY) {
+					// Resolve along X-axis
+					if (minA.x < minB.x) {
+						position.x -= overlapX; // Move left
+						if (velocity.x > 0) velocity.x = 0; // Stop rightward motion
+					}
+					else {
+						position.x += overlapX; // Move right
+						if (velocity.x < 0) velocity.x = 0; // Stop leftward motion
+					}
+				}
+				else {
+					// Resolve along Y-axis
+					if (minA.y < minB.y) {
+						position.y -= overlapY; // Move down (unlikely, but included for completeness)
+						if (velocity.y > 0) velocity.y = 0;
+					}
+					else {
+						position.y += overlapY; // Move up
+						if (velocity.y < 0) velocity.y = 0; // Stop downward motion
+					}
+				}
+			}
+		}
+	}
+}
 
 /*
 void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 pos, glm::vec2 size, glm::vec2 vel) {
