@@ -28,26 +28,16 @@ Derivative PhysicsComponent::RK4_EvaluateVec2(PhysicsState& initial, double time
 
 glm::vec2 PhysicsComponent::RK4_AccelerationVec2(const PhysicsState& state, double time) {
 
-	accF = glm::vec2(0.0f, 0.0f);
+	glm::vec2 acc = glm::vec2(0.0f);
 
-	accF += glm::vec2(0.0f, -150.0f);
-
-	if (testButton1) {
-		accF += glm::vec2(0.0f, 1000.0f);
+	if (testButton3) {
+		acc.y -= 1000.0f;
 	}
-	if (testButton3 && state.velocity.x > -300.f) {
-		accF += glm::vec2(-600.0f, 0.0f);
-	}
-	if (testButton4 && state.velocity.x < 300.f) {
-		accF += glm::vec2(600.0f, 0.0f);
-	}
-	if (testButton2) {
-		accF += glm::vec2(0.0f, -1000.0f);
+	if (testButton4) {
+		acc.y += 3000.0f;
 	}
 
-	accF += fric;
-
-	return accF;
+	return acceleration + acc;
 }
 
 void PhysicsComponent::RK4_IntegrateVec2(PhysicsState& state, double time, double timeStep) {
@@ -66,7 +56,7 @@ void PhysicsComponent::RK4_IntegrateVec2(PhysicsState& state, double time, doubl
 
 }
 
-void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks) {
+void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
 
 	// add 2 distinct structs, static box and dynamic box
 
@@ -76,26 +66,13 @@ void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<G
 
 
 
-		bool isInputApplied = testButton3 || testButton4;
-
-		fric = glm::vec2(0.0f);
-		if (normal.y == 1) { // On ground
-			if (!isInputApplied && std::abs(current.velocity.x) < 10.0f) {
-				// No input: stop the object when velocity is below threshold
-				fric.x = -current.velocity.x / timeStep;
-			}
-			else if (std::abs(current.velocity.x) > 0.0f) {
-				// Moving with or without input: apply constant friction
-				fric.x = -80.0f * glm::normalize(current.velocity).x;
-			}
-		}
-
 
 
 
 		previous = current;
+		MovementUpdate(activeKeys);
 		RK4_IntegrateVec2(current, time, timeStep);
-		CUpdate(blocks, previous.position, current.position, current.velocity, timeStep);
+		CollisionUpdate(blocks, previous.position, current.position, current.velocity, timeStep);
 
 		time += timeStep;
 		accumulator -= timeStep;
@@ -107,13 +84,22 @@ void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<G
 	mInterpolatedState.position = MultiplyVec2AndDouble(current.position, alpha) + MultiplyVec2AndDouble(previous.position, (1.0f - alpha));
 	mInterpolatedState.velocity = MultiplyVec2AndDouble(current.velocity, alpha) + MultiplyVec2AndDouble(previous.velocity, (1.0f - alpha));
 
-	std::cout << glm::to_string(current.velocity) << glm::to_string(mInterpolatedState.position) << std::endl;
+	//std::cout << glm::to_string(current.velocity) << glm::to_string(mInterpolatedState.position) << glm::to_string(normal) << glm::to_string(frictest) << std::endl;
 
 
 	//std::cout << glm::to_string(normal) << std::endl;
 }
 
-bool PhysicsComponent::RayVsRectT(const glm::vec2& rayOrigin, const glm::vec2& rayDirection, const Box* target, glm::vec2& contactPoint, glm::vec2& contactNormal, float& hitTimeNear)
+bool PhysicsComponent::PointVsRect(const glm::vec2& point, const glm::vec2& boxSize, const glm::vec2& boxPos) {
+	return (point.x >= boxPos.x && point.y >= boxPos.y && point.x < boxPos.x + boxSize.x && point.y < boxPos.y + boxSize.y);
+}
+
+bool PhysicsComponent::RectVsRect(const glm::vec2 rect1Pos, const glm::vec2 rect1Size, const glm::vec2 rect2Pos, const glm::vec2 rect2Size) {
+	return (rect1Pos.x < rect2Pos.x + rect2Size.x && rect1Pos.x + rect1Size.x > rect2Pos.x && rect1Pos.y < rect2Pos.y + rect2Size.y && rect1Pos.y + rect1Size.y > rect2Pos.y);
+}
+
+
+bool PhysicsComponent::RayVsRect(const glm::vec2& rayOrigin, const glm::vec2& rayDirection, const Box* target, glm::vec2& contactPoint, glm::vec2& contactNormal, float& hitTimeNear)
 {
 	contactNormal = { 0,0 };
 	contactPoint = { 0,0 };
@@ -178,142 +164,85 @@ bool PhysicsComponent::RayVsRectT(const glm::vec2& rayOrigin, const glm::vec2& r
 	return true;
 }
 
-bool PhysicsComponent::DynamicRectVsRectT(const glm::vec2& size, const float deltaTime, const Box& staticBox, const glm::vec2& dynamicBoxVelocity,
-	glm::vec2& contactPoint, glm::vec2& contactNormal, float& contactTime, glm::vec2& position)
-{
-	if (dynamicBoxVelocity.x == 0 && dynamicBoxVelocity.y == 0)
-		return false;
-
-	Box expanded_target;
-	expanded_target.Position = staticBox.Position - (size / 2.0f);
-	expanded_target.Size = staticBox.Size + size;
-
-	if (RayVsRectT(position + (size / 2.0f), dynamicBoxVelocity * deltaTime, &expanded_target, contactPoint, contactNormal, contactTime)) {
-		return (contactTime >= 0.0f && contactTime < 1.0f);
-	}
-	else {
-		return false;
-	}
-}
-
-bool PhysicsComponent::ResolveDynamicRectVsRectT(const glm::vec2& size, const float deltaTime, const Box& staticBox, glm::vec2 dynamicBoxVelocity, glm::vec2& pos, glm::vec2& impulse)
-{
-
-	glm::vec2 contactPoint, contactNormal;
-	float contactTime = 0.0f;
-	if (DynamicRectVsRectT(size, deltaTime, staticBox, dynamicBoxVelocity, contactPoint, contactNormal, contactTime, pos))
-	{
-		float vRel = glm::dot(dynamicBoxVelocity, contactNormal);
-
-		if (vRel < 0)
-		{
-			float restitution = 0.0f;
-
-			float j = -(1.0f + restitution) * vRel;
-
-			impulse = j * contactNormal;
-		}
-
-		//impulse = contactNormal * glm::vec2(std::abs(dynamicBoxVelocity.x), std::abs(dynamicBoxVelocity.y)) * (1 - contactTime);
-
-
-		return true;
-	}
-	return false;
-}
-
-
-
-void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep) {
+void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep) {
 
 	ResolvePenetration(blocks, currentPos, velocity, glm::vec2(40.0f));
 
-
-	glm::vec2 contactPoint, contactNormal;
-	float contactTime = 0.0f;
-	std::vector<std::pair<int, float>> collidedBlocks;
-	glm::vec2 dynamicBoxVelocity = (currentPos - previousPos) / (float)timeStep; 
-
-	for (int i = 0; i < blocks->size(); i++) {
-		if (!blocks->at(i).mIsDeathTrigger && blocks->at(i).mIsCollidable) {
-			if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(i).mSprite.mVertexData, dynamicBoxVelocity, contactPoint, contactNormal, contactTime, previousPos)) {
-				collidedBlocks.push_back({ i, contactTime });
-				//collBlocks.push_back(blocks->at(i).mSprite.mVertexData.Position);
-
-			}
-		}
+	if (normal.y == 1) {
+		mGrounded = true;
 	}
-
-	std::sort(collidedBlocks.begin(), collidedBlocks.end(), [](const std::pair<int, float>& a, const std::pair<int, float>& b) {
-		return a.second < b.second;
-		});
-
-	glm::vec2 totalImpulse = glm::vec2(0.0f);
-	std::set<float> resolvedNormalsX;
-
-	std::set<float> resolvedNormalsY; 
-
-	float earliestTime = 1.0f;
-
-	// Resolve collisions
-	for (auto j : collidedBlocks) {
-		glm::vec2 impulse = glm::vec2(0.0f);
-	
-		glm::vec2 cp, cn;
-		float ct = 0;
-	
-
-		if (DynamicRectVsRectT(glm::vec2(40.0f), timeStep, blocks->at(j.first).mSprite.mVertexData, dynamicBoxVelocity, cp, cn, ct, previousPos)) {
-			if (!resolvedNormalsX.contains(cn.x) && !resolvedNormalsY.contains(cn.y)) {
-				float vRel = glm::dot(velocity, cn);
-				//std::cout << "vRel: " << vRel << ", Velocity: (" << current.velocity.x << ", " << current.velocity.y << "), Normal: (" << cn.x << ", " << cn.y << ")" << std::endl;
-				
-				if (vRel < 0) {
-					float restitution = 0.0f; // Adjust as needed
-					float jMag = -(1.0f + restitution) * vRel;
-					impulse = jMag * cn;
-					totalImpulse += impulse;
-
-					earliestTime = std::min(earliestTime, contactTime);
-
-					if (cn.x != 0) {
-						resolvedNormalsX.insert(cn.x);
-					}
-					if (cn.y != 0) {
-						resolvedNormalsY.insert(cn.y);
-					}
-				}
-			}
-		}
-		//collBlocks.push_back(blocks->at(j.first).mSprite.mVertexData.Position);
-	
-		// Compute impulse using current velocity (post-integration)
+	else {
+		mGrounded = false;
 	}
-
-	// Apply total impulse to velocity
-
-	if (totalImpulse.y != 0 || totalImpulse.x != 0) {
-		//std::cout << "Total Impulse: " << glm::to_string(totalImpulse) << std::endl;
-	}
-
-	if (resolvedNormalsX.size() > 0 || resolvedNormalsY.size()> 0) {
-		//currentPos = previousPos + dynamicBoxVelocity * (float)timeStep * earliestTime;
-		//velocity += totalImpulse;
-
-	}
-
-	//ResolvePenetration(blocks, currentPos, velocity, glm::vec2(40.0f));
-
 }
+
+//vec2(-494.889832, -1065.360596)vec2(927.416077, 288.115143)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//vec2(-493.902435, -1065.437256)vec2(925.768921, 284.568420)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//vec2(-493.902435, -1065.437256)vec2(924.120483, 281.016083)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//vec2(-492.916718, -1065.513916)vec2(922.474365, 277.466736)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//vec2(-492.916718, -1065.513916)vec2(920.818359, 273.890778)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//vec2(-492.916718, -1065.513916)vec2(919.184692, 270.362885)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//vec2(0.000000, 0.000000)vec2(918.645630, 270.079895)vec2(1.000000, 1.000000)vec2(0.000000, 0.000000)
+//vec2(0.000000, 0.000000)vec2(918.188110, 270.023285)vec2(1.000000, 1.000000)vec2(0.000000, 0.000000)
+//vec2(0.000000, 0.000000)vec2(918.000000, 270.000000)vec2(0.000000, 1.000000)vec2(0.000000, 0.000000)
+//vec2(0.000000, 0.000000)vec2(918.000000, 270.000000)vec2(0.000000, 1.000000)vec2(0.000000, 0.000000)
+//vec2(0.000000, 0.000000)vec2(918.000000, 270.000000)vec2(0.000000, 1.000000)vec2(0.000000, 0.000000)
+
+
+
+//vec2(-388.555298, -907.268372)vec2(905.328857, 277.570221)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//vec2(-388.555298, -907.268372)vec2(904.033203, 274.548798)vec2(0.000000, 0.000000)vec2(0.000000, 0.000000)
+//
+//vec2(1.000000, 0.000000)Ovx: 0.0968018, Ovy : 5.10031 MinA : vec2(899.903198, 264.899689)MaxA : vec2(939.903198, 304.899689)MinB : vec2(882.000000, 252.000000)MaxB : vec2(900.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : 18, Ovy : 5.10031 MinA : vec2(900.000000, 264.899689)MaxA : vec2(940.000000, 304.899689)MinB : vec2(900.000000, 252.000000)MaxB : vec2(918.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : 18, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(918.000000, 252.000000)MaxB : vec2(936.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : 4, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(936.000000, 252.000000)MaxB : vec2(954.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : -14, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(954.000000, 252.000000)MaxB : vec2(972.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : -32, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(972.000000, 252.000000)MaxB : vec2(990.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : -50, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(990.000000, 252.000000)MaxB : vec2(1008.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : -68, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(1008.000000, 252.000000)MaxB : vec2(1026.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : -86, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(1026.000000, 252.000000)MaxB : vec2(1044.000000, 270.000000)
+//vec2(1.000000, 1.000000)Ovx : -104, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(1044.000000, 252.000000)MaxB : vec2(1062.000000, 270.000000)
+//
+//vec2(0.000000, 0.000000)vec2(902.745117, 271.859314)vec2(1.000000, 1.000000)vec2(0.000000, 0.000000)
+//
+//vec2(0.000000, 1.000000)Ovx : 18, Ovy : 0.000305176 MinA : vec2(900.000000, 269.999695)MaxA : vec2(940.000000, 309.999695)MinB : vec2(900.000000, 252.000000)MaxB : vec2(918.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : 18, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(918.000000, 252.000000)MaxB : vec2(936.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : 4, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(936.000000, 252.000000)MaxB : vec2(954.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : -14, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(954.000000, 252.000000)MaxB : vec2(972.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : -32, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(972.000000, 252.000000)MaxB : vec2(990.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : -50, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(990.000000, 252.000000)MaxB : vec2(1008.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : -68, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(1008.000000, 252.000000)MaxB : vec2(1026.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : -86, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(1026.000000, 252.000000)MaxB : vec2(1044.000000, 270.000000)
+//vec2(0.000000, 1.000000)Ovx : -104, Ovy : 0 MinA : vec2(900.000000, 270.000000)MaxA : vec2(940.000000, 310.000000)MinB : vec2(1044.000000, 252.000000)MaxB : vec2(1062.000000, 270.000000)
+//
+//vec2(0.000000, 0.000000)vec2(900.000000, 270.000000)vec2(0.000000, 1.000000)vec2(0.000000, 0.000000)
+
+
 
 void PhysicsComponent::ResolvePenetration(const std::vector<GameObject>* blocks, glm::vec2& position, glm::vec2& velocity, glm::vec2 size) {
 
 	normal = glm::vec2(0.0f);
 
+	// Check penetration on high speeds / low tick rate, i suspect it might fail if overlap is bigger than half of the block
+	// Add support for sliding mechanic (under the blocks)
+
 	
+	// a possible fix is to assure the players y pos is < than blocks t pos + y size, for collision on x to occur
+	// same with y axis
+
+	// will deal with it later, fuck it 
+
+	int asd = 0;
+
+		// Bottom left corner of broad-phase-box
+	glm::vec2 A(position.x - 3 * 40.0f, position.y - 3 * 40.0f);
+	// Top right corner of broad-phase-box
+	glm::vec2 B(position.x + 4 * 40.0f, position.y + 4 * 40.0f);
 
 	for (const auto& block : *blocks) {
-		if (!block.mIsDeathTrigger && block.mIsCollidable) {
+		if (!block.mIsDeathTrigger && block.mIsCollidable && block.mSprite.mVertexData.Position.x > A.x && block.mSprite.mVertexData.Position.x < B.x && block.mSprite.mVertexData.Position.y > A.y && block.mSprite.mVertexData.Position.y < B.y) {
+
 			// AABB bounds: character
 			glm::vec2 minA = position;
 			glm::vec2 maxA = position + size;
@@ -354,59 +283,145 @@ void PhysicsComponent::ResolvePenetration(const std::vector<GameObject>* blocks,
 					}
 				}
 			}
+			if (normal.x != 0.0f || normal.y != 0.0f) {
+				//std::cout << glm::to_string(normal) << "Ovx: " << overlapX << ", Ovy: " << overlapY << "MinA: " << glm::to_string(minA) << "MaxA: " << glm::to_string(maxA) << "MinB: " << glm::to_string(minB) << "MaxB: " << glm::to_string(maxB) << std::endl;
+			}
+			asd++;
 		}
 	}
+			//std::cout << asd << std::endl;
 
 	// add trigger handling, 
 }
 
-/*
-void PhysicsComponent::CUpdate(const std::vector<GameObject>* blocks, glm::vec2 pos, glm::vec2 size, glm::vec2 vel) {
-	glm::vec2 contactPoint, contactNormal;
+void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
+	acceleration = glm::vec2(0.0f, 0.0f);
 
-	float contactTime = 0;
+	// Gravity
+	if (current.velocity.y <= 0 && current.velocity.y > mPhysicsSettings.FallSpeedLimit) {
+		acceleration.y += mPhysicsSettings.GravityDOWN;
+	}
+	else if (current.velocity.y > 0) {
+		acceleration.y += mPhysicsSettings.GravityUP;
+	}
 
-	std::vector<std::pair<int, float>> colidedBlocks;
+	// Fall speed limit
+	if (current.velocity.y < mPhysicsSettings.FallSpeedLimit) {
+		acceleration.y += -(current.velocity.y - mPhysicsSettings.FallSpeedLimit) / timeStep;
+	}
 
-	glm::vec2 A(pos.x - 3 * 40.0f, pos.y - 3 * 40.0f);
-	// Top right corner of broad-phase-box
-	glm::vec2 B(pos.x + 4 * 40.0f, pos.y + 4 * 40.0f);
-
-	for (int i = 0; i < blocks->size(); i++) {
-		if (blocks->at(i).mSprite.mVertexData.Position.x > A.x && blocks->at(i).mSprite.mVertexData.Position.x < B.x && blocks->at(i).mSprite.mVertexData.Position.y > A.y && blocks->at(i).mSprite.mVertexData.Position.y < B.y) {
-			if (!blocks->at(i).mIsDeathTrigger && blocks->at(i).mIsCollidable == true) {
-				if (DynamicRectVsRectT(size, 1.0f, blocks->at(i).mSprite.mVertexData, vel, contactPoint, contactNormal, contactTime, pos)) {
-					colidedBlocks.push_back({ i, contactTime });
+	// Movement on X-axis (run) on ground and mid air
+	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
+		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit) {
+			if (mGrounded) {
+				if (current.velocity.x - mPhysicsSettings.RunAccelerationOnFoot * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += -mPhysicsSettings.RunAccelerationOnFoot;
+				}
+				else if (current.velocity.x < 0.0f) {
+					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
+				}
+			}
+			else {
+				if (current.velocity.x - mPhysicsSettings.RunAccelerationMidAir * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += -mPhysicsSettings.RunAccelerationMidAir;
+				}
+				else if (current.velocity.x < 0.0f) {
+					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
+				}
+			}
+		}
+	}
+	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) {
+		if (current.velocity.x < mPhysicsSettings.RunSpeedLimit) {
+			if (mGrounded) {
+				if (current.velocity.x + mPhysicsSettings.RunAccelerationOnFoot * timeStep <= mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += mPhysicsSettings.RunAccelerationOnFoot;
+				}
+				else if (current.velocity.x > 0.0f) {
+					acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
+				}
+			}
+			else {
+				if (current.velocity.x + mPhysicsSettings.RunAccelerationMidAir * timeStep <= mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += mPhysicsSettings.RunAccelerationMidAir;
+				}
+				else if (current.velocity.x > 0.0f) {
+					acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
 				}
 			}
 		}
 	}
 
-	std::sort(colidedBlocks.begin(), colidedBlocks.end(), [](const std::pair<int, float>& a, const std::pair<int, float>& b) {
-		return a.second < b.second;
-		});
+	static bool isJumping = false;
 
-	glm::vec2 totalImpulse = glm::vec2(0.0f);
+	static int ticks = 0;
 
-	// Resolve collisions
-	for (const auto& j : colidedBlocks) {
-		glm::vec2 impulse = glm::vec2(0.0f);
-		Box staticBox = blocks->at(j.first).mSprite.mVertexData;
+	// Test
+	if (activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
+		//acceleration.y -= 1000.0f;
+	}
 
-		// Compute impulse using current velocity (post-integration)
-		float vRel = glm::dot(vel, contactNormal);
-		if (vRel < 0) {
-			float restitution = 0.0f; // Adjust as needed
-			float jMag = -(1.0f + restitution) * vRel;
-			impulse = jMag * contactNormal;
-			totalImpulse += impulse;
+
+	// Friction on gound and air resistance mid air
+	if (!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f) {
+		if (mGrounded) { // On ground
+			if (std::abs(current.velocity.x) < mPhysicsSettings.FrictionStopSpeed) {
+				// No input: stop the object when velocity is below threshold
+				acceleration.x = -current.velocity.x / timeStep;
+			}
+			else {
+				// Moving without input: apply constant friction	
+				acceleration.x = -mPhysicsSettings.DefaultFriction * glm::normalize(current.velocity).x;
+				// values > ~3800.0f are unstable 
+			}
+		}
+		else {
+			if (std::abs(current.velocity.x) < mPhysicsSettings.AirResistanceStopSpeed) {
+				// No input: stop the object when velocity is below threshold
+				acceleration.x = -current.velocity.x / timeStep;
+			}
+			else {
+				// Moving without input: apply constant friction
+				acceleration.x = -mPhysicsSettings.DefaultAirResistance * glm::normalize(current.velocity).x;
+				// values > ~3800.0f are unstable
+			}
 		}
 	}
 
-	// Apply total impulse to velocity
-	current.velocity += totalImpulse;
 
-	std::cout << glm::to_string(current.velocity) << std::endl;
+	if (activeKeys[static_cast<int>(ActiveKeys::SPACE)]) {
+		if (mSpacebarOneShot) {
+
+			jumpBufferTimer = std::chrono::high_resolution_clock::now();
+
+
+
+			mSpacebarOneShot = false;
+		}
+
+
+
+		if (isJumping && ticks < 64) {
+			ticks++;  
+			acceleration.y += 2000.0f;
+			std::cout << "a" << std::endl;
+		}
+
+
+	}
+
+	if (mGrounded && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - jumpBufferTimer).count() < 200) {
+		jumpBufferTimer = std::chrono::time_point<std::chrono::steady_clock>{};
+		isJumping = true;
+
+		ticks = 0;
+
+		acceleration.y += mPhysicsSettings.JumpStartImpulse;
+		mGrounded = false;
+		std::cout << "bv" << std::endl;
+	}
+	if (mGrounded || current.velocity.y < 0.0f) {
+		isJumping = false;
+	}
 
 }
-*/

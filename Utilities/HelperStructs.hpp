@@ -12,6 +12,13 @@ enum class Levels {
 	END
 };
 
+enum class ActiveKeys {
+	MOVE_LEFT,
+	MOVE_RIGHT,
+	SPACE,
+	DUCK
+};
+
 struct Box {
 	glm::vec2 Position;
 	glm::vec4 Color;
