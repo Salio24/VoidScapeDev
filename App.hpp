@@ -125,9 +125,11 @@ private:
 
 	void ShutDown();
 
-	void Update();
-
 	void UpdatePlayground(float deltaTime);
+
+	void TickRateUpdate();
+
+	void Update();
 
 	static void APIENTRY GLDebugMessageCallback(GLenum source, GLenum type, GLuint id,
 		GLenum severity, GLsizei length,
@@ -135,8 +137,12 @@ private:
 
 	bool gameStarted{ false };
 
-	float deltaTime      { 0.0f };
-	double dtD{ 0.0f };
+	float deltaTimeOld      { 0.0f };
+	double deltaTime		{ 0.0f };
+
+	double time = 0.0f;
+	double accumulator = 0.0f;
+	double timeStep = 1.0f / 128.0f;
 
 	float textSizeMultiplier    { 800.0f };
 

@@ -1,5 +1,4 @@
 #include "PhysicsComponent.hpp"
-#include <set>
 
 PhysicsComponent::PhysicsComponent() {
 
@@ -56,7 +55,7 @@ void PhysicsComponent::RK4_IntegrateVec2(PhysicsState& state, double time, doubl
 
 }
 
-void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
+void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], glm::vec2 colliderSize) {
 
 	// add 2 distinct structs, static box and dynamic box
 
@@ -64,37 +63,46 @@ void PhysicsComponent::FixedTickrateUpdate(double deltaTime, const std::vector<G
 
 	while (accumulator >= timeStep) {
 
-
-
-
-
-
-		previous = current;
-		MovementUpdate(activeKeys);
-		RK4_IntegrateVec2(current, time, timeStep);
-		CollisionUpdate(blocks, previous.position, current.position, current.velocity, timeStep);
-
 	
-		//std::cout << glm::to_string(current.velocity) << glm::to_string(current.position) << glm::to_string(acceleration) << glm::to_string(normal) << glm::to_string(frictest) << std::endl;
-
-		if (current.position.y > 472.83f) {
-			std::cout << "Velocity: " << glm::to_string(current.velocity) << " Position: " << glm::to_string(current.position) << " Acceleration: " << glm::to_string(acceleration) << " Delta vel: " << current.velocity.y - previous.velocity.y << " Delta pos: " << current.position.y - previous.position.y << std::endl;
-		}
 
 
 		time += timeStep;
 		accumulator -= timeStep;
 	}
 
+	previous = current;
+	MovementUpdate(activeKeys);
+	RK4_IntegrateVec2(current, time, timeStep);
+	CollisionUpdate(blocks, previous.position, current.position, current.velocity, timeStep, colliderSize);
 
-	const double alpha = accumulator / timeStep;
+	//std::cout << "Velocity: " << glm::to_string(current.velocity) << " Position: " << glm::to_string(current.position) << " Acceleration: " << glm::to_string(acceleration) << " Delta vel: " << current.velocity.y - previous.velocity.y << " Delta pos: " << current.position.y - previous.position.y << std::endl;
 
-	mInterpolatedState.position = MultiplyVec2AndDouble(current.position, alpha) + MultiplyVec2AndDouble(previous.position, (1.0f - alpha));
-	mInterpolatedState.velocity = MultiplyVec2AndDouble(current.velocity, alpha) + MultiplyVec2AndDouble(previous.velocity, (1.0f - alpha));
+	if (current.position.y > 640.0f) {
 
+	}
+	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
 
+	//const double alpha = accumulator / timeStep;
+	//
+	//mInterpolatedState.position = MultiplyVec2AndDouble(current.position, alpha) + MultiplyVec2AndDouble(previous.position, (1.0f - alpha));
+	//mInterpolatedState.velocity = MultiplyVec2AndDouble(current.velocity, alpha) + MultiplyVec2AndDouble(previous.velocity, (1.0f - alpha));
 
 	//std::cout << glm::to_string(normal) << std::endl;
+}
+
+std::pair<glm::vec2, glm::vec2> PhysicsComponent::Update(double accumulator, double timeStep) {
+	const double alpha = accumulator / timeStep;
+
+	std::pair<glm::vec2, glm::vec2> interpolated;
+
+	interpolated.first = MultiplyVec2AndDouble(current.position, alpha) + MultiplyVec2AndDouble(previous.position, (1.0f - alpha));
+	interpolated.second = MultiplyVec2AndDouble(current.velocity, alpha) + MultiplyVec2AndDouble(previous.velocity, (1.0f - alpha));
+
+	return interpolated;
+}
+
+void PhysicsComponent::SetPosition(glm::vec2 position) {
+	current.position = position;
 }
 
 bool PhysicsComponent::PointVsRect(const glm::vec2& point, const glm::vec2& boxSize, const glm::vec2& boxPos) {
@@ -171,9 +179,9 @@ bool PhysicsComponent::RayVsRect(const glm::vec2& rayOrigin, const glm::vec2& ra
 	return true;
 }
 
-void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep) {
+void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep, glm::vec2 colliderSize) {
 
-	ResolvePenetration(blocks, currentPos, velocity, glm::vec2(40.0f));
+	ResolvePenetration(blocks, currentPos, velocity, colliderSize);
 
 	if (normal.y == 1) {
 		mGrounded = true;
@@ -240,13 +248,47 @@ void PhysicsComponent::ResolvePenetration(const std::vector<GameObject>* blocks,
 
 	// will deal with it later, fuck it 
 
-	int asd = 0;
-
 		// Bottom left corner of broad-phase-box
-	glm::vec2 A(position.x - 3 * 40.0f, position.y - 3 * 40.0f);
+	glm::vec2 A(position.x - 3 * size.x, position.y - 3 * size.y);
 	// Top right corner of broad-phase-box
-	glm::vec2 B(position.x + 4 * 40.0f, position.y + 4 * 40.0f);
+	glm::vec2 B(position.x + 4 * size.x, position.y + 4 * size.y);
 
+	for (const auto& block : *blocks) {
+		if (!block.mIsDeathTrigger && block.mIsCollidable && block.mSprite.mVertexData.Position.x > A.x && block.mSprite.mVertexData.Position.x < B.x && block.mSprite.mVertexData.Position.y > A.y && block.mSprite.mVertexData.Position.y < B.y) {
+
+			// AABB bounds: character
+			glm::vec2 minA = position;
+			glm::vec2 maxA = position + size;
+			// AABB bounds: static block
+			glm::vec2 minB = block.mSprite.mVertexData.Position;
+			glm::vec2 maxB = minB + block.mSprite.mVertexData.Size;
+
+			// Calculate overlap in each axis
+			float overlapX = std::min(maxA.x, maxB.x) - std::max(minA.x, minB.x);
+			float overlapY = std::min(maxA.y, maxB.y) - std::max(minA.y, minB.y);
+
+			if (overlapX > 0 && overlapY > 0) {
+				// Resolve along the axis with the smallest penetration
+				if (overlapX > overlapY) {
+					// Resolve along Y-axis
+					if (minA.y < minB.y) {
+						position.y -= overlapY; // Move down 
+						normal.y = -1.0f;
+						if (velocity.y > 0) velocity.y = 0;
+					}
+					else {
+						position.y += overlapY; // Move up
+						normal.y = 1.0f;
+						if (velocity.y < 0) velocity.y = 0;
+					}
+				}
+				
+				if (normal.x != 0.0f) {
+					//std::cout << glm::to_string(normal) << " Ovx: " << overlapX << ", Ovy: " << overlapY << ", MinA: " << glm::to_string(minA) << ", MaxA: " << glm::to_string(maxA) << ", MinB: " << glm::to_string(minB) << ", MaxB: " << glm::to_string(maxB) << std::endl;
+				}
+			}
+		}
+	}
 	for (const auto& block : *blocks) {
 		if (!block.mIsDeathTrigger && block.mIsCollidable && block.mSprite.mVertexData.Position.x > A.x && block.mSprite.mVertexData.Position.x < B.x && block.mSprite.mVertexData.Position.y > A.y && block.mSprite.mVertexData.Position.y < B.y) {
 
@@ -268,37 +310,24 @@ void PhysicsComponent::ResolvePenetration(const std::vector<GameObject>* blocks,
 					if (minA.x < minB.x) {
 						position.x -= overlapX; // Move left
 						normal.x = -1.0f;
-						if (velocity.x > 0) velocity.x = 0; 
+						if (velocity.x > 0) velocity.x = 0;
 					}
 					else {
 						position.x += overlapX; // Move right
 						normal.x = 1.0f;
-						if (velocity.x < 0) velocity.x = 0; 
+						if (velocity.x < 0) velocity.x = 0;
 					}
 				}
-				else {
-					// Resolve along Y-axis
-					if (minA.y < minB.y) {
-						position.y -= overlapY; // Move down 
-						normal.y = -1.0f;
-						if (velocity.y > 0) velocity.y = 0;
-					}
-					else {
-						position.y += overlapY; // Move up
-						normal.y = 1.0f;
-						if (velocity.y < 0) velocity.y = 0; 
-					}
+
+				if (normal.x != 0.0f) {
+					//std::cout << glm::to_string(normal) << " Ovx: " << overlapX << ", Ovy: " << overlapY << ", MinA: " << glm::to_string(minA) << ", MaxA: " << glm::to_string(maxA) << ", MinB: " << glm::to_string(minB) << ", MaxB: " << glm::to_string(maxB) << std::endl;
 				}
 			}
-			if (normal.x != 0.0f || normal.y != 0.0f) {
-				//std::cout << glm::to_string(normal) << "Ovx: " << overlapX << ", Ovy: " << overlapY << "MinA: " << glm::to_string(minA) << "MaxA: " << glm::to_string(maxA) << "MinB: " << glm::to_string(minB) << "MaxB: " << glm::to_string(maxB) << std::endl;
-			}
-			asd++;
 		}
 	}
-			//std::cout << asd << std::endl;
+	//std::cout << asd << std::endl;
 
-	// add trigger handling, 
+// add trigger handling, 
 }
 
 void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
@@ -317,16 +346,23 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		acceleration.y += -(current.velocity.y - mPhysicsSettings.FallSpeedLimit) / timeStep;
 	}
 
+	if (Sign(current.velocity.x) == -1) {
+		mLookDirection = LookDirections::LEFT;
+	}
+	else if (Sign(current.velocity.x) == 1) {
+		mLookDirection = LookDirections::RIGHT;
+	}
+
 	// Movement on X-axis (run) on ground and mid air
 	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
-		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit) {
+		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit && !mSliding) {
 			if (mGrounded) {
 				if (current.velocity.x - mPhysicsSettings.RunAccelerationOnFoot * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
 					acceleration.x += -mPhysicsSettings.RunAccelerationOnFoot;
 				}
 				else if (current.velocity.x < 0.0f) {
 					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
-				}
+				} 
 			}
 			else {
 				if (current.velocity.x - mPhysicsSettings.RunAccelerationMidAir * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
@@ -337,9 +373,13 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 				}
 			}
 		}
+		else if (current.velocity.x < -mPhysicsSettings.RunSpeedLimit && mGrounded) {
+			acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
+		}
+		mLookDirection = LookDirections::LEFT;
 	}
 	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) {
-		if (current.velocity.x < mPhysicsSettings.RunSpeedLimit) {
+		if (current.velocity.x < mPhysicsSettings.RunSpeedLimit && !mSliding) {
 			if (mGrounded) {
 				if (current.velocity.x + mPhysicsSettings.RunAccelerationOnFoot * timeStep <= mPhysicsSettings.RunSpeedLimit) {
 					acceleration.x += mPhysicsSettings.RunAccelerationOnFoot;
@@ -357,29 +397,46 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 				}
 			}
 		}
+		else if (current.velocity.x > mPhysicsSettings.RunSpeedLimit && mGrounded) {
+			acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
+		}
+		mLookDirection = LookDirections::RIGHT;
 	}
 
-	static bool isJumping = false;
-
-	static int ticks = 0;
-
-	// Test
-	if (activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
-		//acceleration.y -= 1000.0f;
+	mActiveRunning = false;
+	mPassiveRunning = false;
+	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded) {
+		mActiveRunning = true;
+	}
+	else if (!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded) {
+		mPassiveRunning = true;
 	}
 
 
 	// Friction on gound and air resistance mid air
-	if (!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f) {
+	if ((!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) || mSliding) && std::abs(current.velocity.x) > 0.0f) {
 		if (mGrounded) { // On ground
-			if (std::abs(current.velocity.x) < mPhysicsSettings.FrictionStopSpeed) {
-				// No input: stop the object when velocity is below threshold
-				acceleration.x = -current.velocity.x / timeStep;
+			if (mSliding) {
+				if (std::abs(current.velocity.x) < mPhysicsSettings.SlidingFrictionStopSpeed) {
+					// No input: stop the object when velocity is below threshold
+					acceleration.x = -current.velocity.x / timeStep;
+				}
+				else {
+					// Moving without input: apply constant friction	
+					acceleration.x = -mPhysicsSettings.SlidingFriction * glm::normalize(current.velocity).x;
+					// values > ~3800.0f are unstable 
+				}
 			}
 			else {
-				// Moving without input: apply constant friction	
-				acceleration.x = -mPhysicsSettings.DefaultFriction * glm::normalize(current.velocity).x;
-				// values > ~3800.0f are unstable 
+				if (std::abs(current.velocity.x) < mPhysicsSettings.DefaultFrictionStopSpeed) {
+					// No input: stop the object when velocity is below threshold
+					acceleration.x = -current.velocity.x / timeStep;
+				}
+				else {
+					// Moving without input: apply constant friction	
+					acceleration.x = -mPhysicsSettings.DefaultFriction * glm::normalize(current.velocity).x;
+					// values > ~3800.0f are unstable 
+				}
 			}
 		}
 		else {
@@ -395,44 +452,72 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		}
 	}
 
+	// Slide
+	if (activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
+		if (mDuckOneShot && mGrounded) {
+			
+
+			switch (mLookDirection) {
+			case LookDirections::LEFT:
+				if (current.velocity.x < -mPhysicsSettings.ThresholdSpeedToSlide) {
+					acceleration.x += mPhysicsSettings.SlidingImpulse * Sign(current.velocity.x);
+
+					mSliding = true;
+				}
+				
+				
+				break;
+			case LookDirections::RIGHT:
+				if (current.velocity.x > mPhysicsSettings.ThresholdSpeedToSlide) {
+					acceleration.x += mPhysicsSettings.SlidingImpulse * Sign(current.velocity.x);
+
+					mSliding = true;
+				}
+
+
+				break;
+			default:
+				break;
+			}
+			mDuckOneShot = false;
+		}
+	}
+	else {
+		mSliding = false;
+	}
 
 	if (activeKeys[static_cast<int>(ActiveKeys::SPACE)]) {
 		if (mSpacebarOneShot) {
 
 			jumpBufferTimer = std::chrono::high_resolution_clock::now();
 
-
-
 			mSpacebarOneShot = false;
 		}
 
-
-
-		if (isJumping && ticks < 64) {
-			ticks++;
-			acceleration.y += 2000.0f;
-			//std::cout << "a" << std::endl;
+		if (mJumping && jumpTickTimer < mPhysicsSettings.VariableJumpTicks) {
+			jumpTickTimer++;
+			acceleration.y += mPhysicsSettings.JumpContinuousAcceleration;
 		}
-
-
+	}
+	else {
+		mJumping = false;
 	}
 
-	if (mGrounded && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - jumpBufferTimer).count() < 200) {
+	if (mGrounded && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - jumpBufferTimer).count() < mPhysicsSettings.JumpBufferTime) {
 		jumpBufferTimer = std::chrono::time_point<std::chrono::steady_clock>{};
-		isJumping = true;
+		mJumping = true;
 
-		ticks = 0;
+		jumpTickTimer = 0;
 
 		acceleration.y += mPhysicsSettings.JumpStartImpulse;
 		mGrounded = false;
-		//std::cout << "bv" << std::endl;
 	}
 	if (mGrounded || current.velocity.y < 0.0f) {
-		isJumping = false;
+		mJumping = false;
 	}
-
-	// 202.849945
-
+	if (!mGrounded) {
+		mSliding = false;
+	}
 }
 
 /*

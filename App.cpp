@@ -340,8 +340,8 @@ void App::UpdatePlayground(float deltaTime) {
 	if (deltaT > 0.25f) {
 		deltaT = 0.25f;
 	}
-
-	mPhysicsComponent.FixedTickrateUpdate(deltaT, mSceneManager.mCurrentBlocks);
+	
+	//mPhysicsComponent.FixedTickrateUpdate(deltaT, mSceneManager.mCurrentBlocks, mInputManager.mActiveKeys);
 
 	//std::cout << glm::to_string(mPhysicsComponent.testV) << std::endl;
 
@@ -349,7 +349,7 @@ void App::UpdatePlayground(float deltaTime) {
 	}
 	static glm::mat4 ttt = glm::mat4(1.0f);
 		
-	mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.mInterpolatedState.position, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &ttt);
+	//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.mInterpolatedState.position, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &ttt);
 
 
 	for (int i = 0; i < mPhysicsComponent.collBlocks.size(); i++) {
@@ -364,27 +364,31 @@ void App::UpdatePlayground(float deltaTime) {
 
 }
 
+void App::TickRateUpdate() {
+	mActor.FixedTickrateUpdate(deltaTime, mSceneManager.mCurrentBlocks, mInputManager.mActiveKeys);
+
+}
+
 void App::Update() {
 	static int fps;
 	// delta time logic vvv
 	TimePoint2 = std::chrono::system_clock::now();
 	static auto lastTime = std::chrono::high_resolution_clock::now();
 	auto currentTime = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<float> elapsedTime = TimePoint2 - TimePoint1; 
-	std::chrono::duration<double> elapsedTime123 = TimePoint2 - TimePoint1;
+	std::chrono::duration<float> elapsedTimeOld = TimePoint2 - TimePoint1; 
+	std::chrono::duration<double> elapsedTime = TimePoint2 - TimePoint1;
 
 	static int frameCount = 0;
+
+
 	frameCount++;
 	// Our time per frame coefficient
+	deltaTimeOld = elapsedTimeOld.count();
 	deltaTime = elapsedTime.count();
-	dtD = elapsedTime123.count();
-	if (dtD > 0.25f) {
-		dtD = 0.25f;
-	}
 	//mPhysicsComponent.mAccumulator += dtD;
 
-	if (deltaTime > 0.25f) {
-		deltaTime = 0.25f;
+	if (deltaTimeOld > 0.25f) {
+		deltaTimeOld = 0.25f;
 	}
 	//accumulator += deltaTime;
 	if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastTime).count() >= 1) {
@@ -399,14 +403,30 @@ void App::Update() {
 
 	TimePoint1 = TimePoint2;
 	// delta time logic ^^^
+
+	if (mSceneManager.mLevelActive == true) {
+		accumulator += deltaTime;
+
+		while (accumulator >= timeStep) {
+
+			TickRateUpdate();
+
+			time += timeStep;
+			accumulator -= timeStep;
+		}
+
+		mActor.Update(accumulator, timeStep);
+	}
+
+
 	if (mSceneManager.mMainMenuActive == true) {
 		mBackgroundRenderer.RenderMenuBackground(&mBackgroundShaderProgram, mPipelineProgram.ID, mCamera.mUIModelMatrix, mCamera.GetProjectionMatrix());
 	}
 	else if (mSceneManager.mLevelActive == true) {
 		if (!mPause) {
-			mBackgroundRenderer.Update(mCamera.mCameraPosition, mActor.mVelocity, deltaTime);
+			mBackgroundRenderer.Update(mCamera.mCameraPosition, mActor.mVelocity, deltaTimeOld);
 		}
-		mBackgroundRenderer.RenderLevelBackground(&mBackgroundShaderProgram, &mBackgroundFramebufferShaderProgram, mPipelineProgram.ID, mCamera.GetProjectionMatrix(), mBlackHole.AABBSize.x, mBlackHole.epicenterAABBPos +	mBlackHole.epicenterAABBSize / 2.0f, mCamera.mCameraPosition.x, gameStarted, deltaTime);
+		mBackgroundRenderer.RenderLevelBackground(&mBackgroundShaderProgram, &mBackgroundFramebufferShaderProgram, mPipelineProgram.ID, mCamera.GetProjectionMatrix(), mBlackHole.AABBSize.x, mBlackHole.epicenterAABBPos +	mBlackHole.epicenterAABBSize / 2.0f, mCamera.mCameraPosition.x, gameStarted, deltaTimeOld);
 	}
 
 	if (mActor.mDead || mActor.mEscaped) {
@@ -417,7 +437,7 @@ void App::Update() {
 		if (mAudioHandler.mInitialMusicVolume < 0) {
 			mAudioHandler.mInitialMusicVolume = 0;
 		}
-		mAudioHandler.mMusicFadeoutTimer += deltaTime;
+		mAudioHandler.mMusicFadeoutTimer += deltaTimeOld;
 		mAudioHandler.SetGlobalMusicVolume(mSettings.MusicVolume);
 	}
 
@@ -436,7 +456,7 @@ void App::Update() {
 	}
 	else {
 		if (mSceneManager.mLevelActive) {
-			startMessageTimer += deltaTime;
+			startMessageTimer += deltaTimeOld;
 			if (startMessageTimer > startMessageTime) {
 				startMessageTimer = 0.0f;
 			}
@@ -456,8 +476,8 @@ void App::Update() {
 	// movement update
 	// actor update
 	if (!mPause) {
-		mMovementHandler.Update(deltaTime, mActor, mSceneManager.mLevelActive, mConfig);
-		mActor.Update();
+		//mMovementHandler.Update(deltaTime, mActor, mSceneManager.mLevelActive, mConfig);
+		//mActor.Update(deltaTime, mSceneManager.mCurrentBlocks, mInputManager.mActiveKeys);
 		if (!mMovementHandler.mLast_mCanDoubleJump && mMovementHandler.mCanDoubleJump && !mActor.mDead) {
 			Mix_PlayChannel(19, mAudioHandler.DoubleJumpRecharge, 0);
 		}
@@ -465,11 +485,11 @@ void App::Update() {
 
 	// black hole update
 	if (gameStarted && !mPause && !mSettings.debugMode) {
-		mBlackHole.Update(mSceneManager.mCurrentBlocks, mActor, deltaTime, mAnimationHandler.BlackHoleBirthAnimation, mAnimationHandler.BlackHoleLoopAnimation, mAudioHandler.BlackHoleBorn, mAudioHandler.ConsumedByVoid, mAudioHandler.BlackHoleIdle, mAudioHandler.mGlobalSFXVolumeModifier, mStateMachine.mActorDeathCause);
+		mBlackHole.Update(mSceneManager.mCurrentBlocks, mActor, deltaTimeOld, mAnimationHandler.BlackHoleBirthAnimation, mAnimationHandler.BlackHoleLoopAnimation, mAudioHandler.BlackHoleBorn, mAudioHandler.ConsumedByVoid, mAudioHandler.BlackHoleIdle, mAudioHandler.mGlobalSFXVolumeModifier, mStateMachine.mActorDeathCause);
 	}
 
-	// dead logic
-	if (mActor.mPosition.y < -500.0f && !mActor.mDead) {
+	// dead logic // disabled
+	if (mActor.mPosition.y < -500.0f && !mActor.mDead && false) {
 		if (!mActor.mDead) {
 			mActor.mVelocity = glm::vec2(0.0f, 0.0f);
 			mActor.mFellDown = true;
@@ -487,8 +507,8 @@ void App::Update() {
 	// collision update
 	// camera update
 	if (!mPause) {
-		CollisionUpdate(mSceneManager.mCurrentBlocks, mActor, mMovementHandler.mLeftWallHug, mMovementHandler.mRightWallHug, deltaTime, mMovementHandler.mIsGrounded, mMovementHandler.mIsWallMountableL, mMovementHandler.mIsWallMountableR);
-		mCamera.Update(mActor.mVelocity, mActor.mScreenPosition, deltaTime);
+		//CollisionUpdate(mSceneManager.mCurrentBlocks, mActor, mMovementHandler.mLeftWallHug, mMovementHandler.mRightWallHug, deltaTimeOld, mMovementHandler.mIsGrounded, mMovementHandler.mIsWallMountableL, mMovementHandler.mIsWallMountableR);
+		mCamera.Update(mActor.mVelocity, mActor.mScreenPosition, deltaTimeOld);
 	}
 
 	for (auto& pair : mSceneManager.mUIScenes.mButtonMap) {
@@ -549,7 +569,7 @@ void App::Update() {
 		mBatchRenderer.EndBatch();
 		mBatchRenderer.Flush();
 
-		mEscapePortal.Update(mAnimationHandler.EscapePortalAnimation, deltaTime, mActor, mAudioHandler.PortalEscape, mAudioHandler.PortalIdle, mAudioHandler.mGlobalSFXVolumeModifier);
+		mEscapePortal.Update(mAnimationHandler.EscapePortalAnimation, deltaTimeOld, mActor, mAudioHandler.PortalEscape, mAudioHandler.PortalIdle, mAudioHandler.mGlobalSFXVolumeModifier);
 		if (mEscapePortal.mSprite.mVertexData.Position.x + mEscapePortal.mSprite.mVertexData.Size.x > (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x - 80.0f)
 			&& mEscapePortal.mSprite.mVertexData.Position.x < (mActor.mPosition.x - 800.0f + mCamera.mCameraOffset.x + 2000.0f)) {
 			mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix());
@@ -591,7 +611,7 @@ void App::Update() {
 			}
 		}
 
-		mSceneManager.UpdateUIMenu(mTextureHandler.mTilesetLocations.mBaseTileset.second, deltaTime, mWindowWidth, mWindowHeight, mQuit, mWindowModes, mResolutions, mWindow);
+		mSceneManager.UpdateUIMenu(mTextureHandler.mTilesetLocations.mBaseTileset.second, deltaTimeOld, mWindowWidth, mWindowHeight, mQuit, mWindowModes, mResolutions, mWindow);
 
 		mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix(), &mCamera.mUIModelMatrix);
 		glActiveTexture(GL_TEXTURE0);
@@ -607,7 +627,7 @@ void App::Update() {
 
 	// state machine update
 	if (mSceneManager.mLevelActive && !mPause) {
-		mStateMachine.Update(mMovementHandler, mAnimationHandler, mAudioHandler, mActor, deltaTime);
+		mStateMachine.Update(mMovementHandler, mAnimationHandler, mAudioHandler, mActor, deltaTimeOld);
 	}
 
 
@@ -630,6 +650,20 @@ void App::Update() {
 	if (mActor.mIsVisible == true && mSceneManager.mLevelActive == true) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[128].first);
+
+
+		// debug
+		mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, mActor.mSprite.mVertexData.Size, glm::vec4(1.0f), mCamera.GetProjectionMatrix(), &mActor.mModelMatrix);
+
+		if (mActor.mPhysicsComponent.mJumping) {
+			mBatchRenderer.DrawSeperatly(glm::vec2(200.0f, 900.0f), glm::vec2(20.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), mCamera.GetProjectionMatrix(), &mCamera.mUIModelMatrix);
+		}
+		if (mActor.mPhysicsComponent.mSliding) {
+			mBatchRenderer.DrawSeperatly(glm::vec2(220.0f, 900.0f), glm::vec2(20.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), mCamera.GetProjectionMatrix(), &mCamera.mUIModelMatrix);
+		}
+
+
+
 		mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mActor.mSprite.mVertexData.Position, mStateMachine.mCurrentActorDrawSize,
 			mStateMachine.mCurrentActorTextureIndex, mStateMachine.mCurrentActorTextureSize, mStateMachine.mCurrentActorTexturePosition, angle, 1.0f, mStateMachine.mActorFlipped, &mActor.mModelMatrix);
 		if (!mActor.mDead) {
@@ -645,7 +679,7 @@ void App::Update() {
 	bool restart = false;
 	bool restartMode = false;
 
-	mSceneManager.UpdateUIInGame(restart, restartMode, mActor.mDead, mActor.mEscaped, mPause, gameStarted, mCamera.GetProjectionMatrix(), mCamera.mUIModelMatrix, deltaTime, mStateMachine.mActorDeathCause, &mTextShaderProgram, mPipelineProgram.ID, fps, mTextureHandler.mTextureArrays[mTextureHandler.mTilesetLocations.mUIBorderTileset.first].first);
+	mSceneManager.UpdateUIInGame(restart, restartMode, mActor.mDead, mActor.mEscaped, mPause, gameStarted, mCamera.GetProjectionMatrix(), mCamera.mUIModelMatrix, deltaTimeOld, mStateMachine.mActorDeathCause, &mTextShaderProgram, mPipelineProgram.ID, fps, mTextureHandler.mTextureArrays[mTextureHandler.mTilesetLocations.mUIBorderTileset.first].first);
 
 	if (restart) {
 		if (restartMode) {
@@ -656,9 +690,9 @@ void App::Update() {
 		}
 	}
 
-	//UpdatePlayground(deltaTime);
+	UpdatePlayground(deltaTimeOld);
 
-	std::cout << "Velocity: " << glm::to_string(mActor.mVelocity) << std::endl;
+	//std::cout << "Velocity: " << glm::to_string(mActor.mVelocity) << std::endl;
 
 }
 

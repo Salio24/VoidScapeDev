@@ -19,6 +19,12 @@ enum class ActiveKeys {
 	DUCK
 };
 
+enum class LookDirections {
+	LEFT,
+	RIGHT,
+	END
+};
+
 struct Box {
 	glm::vec2 Position;
 	glm::vec4 Color;

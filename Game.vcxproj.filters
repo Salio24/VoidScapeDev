@@ -75,9 +75,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\glad.c">
-      <Filter>Externals</Filter>
-    </ClCompile>
     <ClCompile Include="Actors\BlackHole.cpp">
       <Filter>Source Files\Actors</Filter>
     </ClCompile>
@@ -154,6 +151,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -264,6 +264,9 @@
     </None>
     <None Include="Graphics\Shaders\vertex\vertexBackground.glsl">
       <Filter>Resource Files\Shaders\Vertex</Filter>
+    </None>
+    <None Include="dev tools &amp; utils\jump_variables_converter.py">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>

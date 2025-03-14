@@ -23,6 +23,8 @@ public:
 
 	Controls mControls;
 
+	bool mActiveKeys[static_cast<int>(ActiveKeys::DUCK) + 1] = { false };
+
 private:
 	App& app();
 

@@ -12,7 +12,16 @@ void Actor::Transform() {
 	mModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(relativePosition, 0.0f));
 }
 
-void Actor::Update() {
+void Actor::FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
+	mPhysicsComponent.FixedTickrateUpdate(deltaTime, blocks, activeKeys, mSprite.mVertexData.Size);
+}
+
+void Actor::Update(double accumulator, double timeStep) {
+	std::pair<glm::vec2, glm::vec2> interpolated = mPhysicsComponent.Update(accumulator, timeStep);
+
+	mPosition = interpolated.first;
+	mVelocity = interpolated.second;
+
 	Move();
 	Transform();
 }
@@ -22,6 +31,9 @@ void Actor::Move() {
 }
 
 void Actor::Reset(glm::vec2& animSize, const glm::vec2& startingPosition) {
+	mPhysicsComponent.SetPosition(startingPosition);
+
+
 	mSprite.mVertexData.Position = startingPosition;
 	mVelocity = glm::vec2(0.0f, 0.0f);
 	mDead = false;

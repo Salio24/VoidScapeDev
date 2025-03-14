@@ -14,11 +14,6 @@ enum class MovementState {
 	END
 };
 
-enum class LookDirections {
-	LEFT,
-	RIGHT,
-	END
-};
 
 class MovementHandler {
 public:

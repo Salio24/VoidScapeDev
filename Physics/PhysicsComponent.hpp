@@ -4,7 +4,9 @@
 #include <chrono>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
-#include "../Actors/Actor.hpp"
+#include "../Utilities/Sign.hpp"
+#include "../Utilities/HelperStructs.hpp"
+#include "../Actors/GameObject.hpp"
 
 
 struct PhysicsSettings {
@@ -12,17 +14,29 @@ struct PhysicsSettings {
 	float GravityDOWN{ -1200.0f };
 	float FallSpeedLimit{ -1500.0f };
 
-	float RunAccelerationOnFoot{ 8000.0f };
+	float RunAccelerationOnFoot{ 1000.0f };
 	float RunAccelerationMidAir{ 400.0f };
 	float RunSpeedLimit{ 800.0f };
 
-	float FrictionStopSpeed{ 20.0f };
+	float DefaultFrictionStopSpeed{ 20.0f };
 	float DefaultFriction{ 2000.0f };
-	
+	// values > ~3800.0f are unstable 
+
 	float AirResistanceStopSpeed{ 10.0f };
 	float DefaultAirResistance{ 300.0f };
+	// values > ~3800.0f are unstable 
+
+	float SlidingFrictionStopSpeed{ 20.0f };
+	float SlidingFriction{ 1000.0f };
+	// values > ~3800.0f are unstable 
+
+	float SlidingImpulse{ 50000.0f };
+	float ThresholdSpeedToSlide{ 300.0f };
 
 	float JumpStartImpulse{ 50000.0f };
+	float JumpContinuousAcceleration{ 2000.0f };
+	int VariableJumpTicks{ 32 };
+	int JumpBufferTime{ 200 };
 
 	float Drag{ 0.0f };
 	float Bounce{ 0.0f };
@@ -54,7 +68,11 @@ public:
 
 	void RK4_IntegrateVec2(PhysicsState& state, double time, double timeStep);
 
-	void FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
+	void FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], glm::vec2 colliderSize);
+
+	std::pair<glm::vec2, glm::vec2> Update(double accumulator, double timeStep);
+
+	void SetPosition(glm::vec2 position);
 
 	bool PointVsRect(const glm::vec2& point, const glm::vec2& boxSize, const glm::vec2& boxPos);
 
@@ -62,7 +80,7 @@ public:
 
 	bool RayVsRect(const glm::vec2& rayOrigin, const glm::vec2& rayDirection, const Box* target, glm::vec2& contactPoint, glm::vec2& contactNormal, float& hitTimeNear);
 
-	void CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep);
+	void CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep, glm::vec2 colliderSize);
 
 	void ResolvePenetration(const std::vector<GameObject>* blocks, glm::vec2& position, glm::vec2& velocity, glm::vec2 size);
 
@@ -73,12 +91,27 @@ public:
 
 	glm::vec2 pos = glm::vec2(0.0f, 800.0f);
 
+	LookDirections mLookDirection = LookDirections::RIGHT;
+
 	bool testButton1{ false };
 	bool testButton2{ false };
 	bool testButton3{ false };
 	bool testButton4{ false };
 
 	bool mGrounded{ false };
+
+	bool mSliding{ false };
+
+	bool mJumping{ false };
+
+	// active movement on ground
+	bool mActiveRunning{ false };
+
+	// passive movement on ground (no input)
+	bool mPassiveRunning{ false };
+
+
+	
 
 	glm::vec2 accF{ 0.0f };
 
@@ -90,10 +123,13 @@ public:
 
 	bool mSpacebarOneShot{ true };
 
+	bool mDuckOneShot{ true };
+
+
 private:
 	double time = 0.0f;
 	double accumulator = 0.0f;
-	double timeStep = 1.0f / 256.0f;
+	double timeStep = 1.0f / 128.0f;
 
 	glm::vec2 acceleration{ 0.0f };
 
@@ -103,11 +139,9 @@ private:
 	glm::vec2 normal;
 	glm::vec2 fric;
 
-	glm::vec2 frictest{ 0.0f };
+	int jumpTickTimer{ 0 };
 
 	std::chrono::time_point < std::chrono::steady_clock, std::chrono::duration<long long, std::ratio < 1, 1000000000>>> jumpBufferTimer;
-
-	std::chrono::time_point < std::chrono::steady_clock, std::chrono::duration<long long, std::ratio < 1, 1000000000>>> jumpTimer;
 
 	glm::vec2 colAcc{ 0.0f };
 

@@ -21,7 +21,6 @@ void InputManager::Input() {
 	static bool ones1 = true;
 	static bool ones2 = true;
 
-
 	SDL_Event e;
 	LClick = false;
 	mLastkey_Relevant = false;
@@ -61,21 +60,30 @@ void InputManager::Input() {
 			}
 		}
 		if (e.type == SDL_EVENT_KEY_UP) {
-
 			if (e.key.scancode == mControls.JUMP_KEY_BIND) {
+				mActiveKeys[static_cast<int>(ActiveKeys::SPACE)] = false;
+				app().mActor.mPhysicsComponent.mSpacebarOneShot = true;
+
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::SPACE)] = false;
 				app().mMovementHandler.mSpacebarOneShot = true;
-				app().mPhysicsComponent.testButton1 = false;
+				app().mActor.mPhysicsComponent.testButton1 = false;
 			} else if (e.key.scancode == mControls.DUCK_KEY_BIND) {
+				mActiveKeys[static_cast<int>(ActiveKeys::DUCK)] = false;
+				app().mActor.mPhysicsComponent.mDuckOneShot = true;
+
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::DUCK)] = false;
 				app().mMovementHandler.mDuckOneShot = true;
-				app().mPhysicsComponent.testButton2 = false;
+				app().mActor.mPhysicsComponent.testButton2 = false;
 			} else if (e.key.scancode == mControls.LEFT_KEY_BIND) {
+				mActiveKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] = false;
+
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_LEFT)] = false;
-				app().mPhysicsComponent.testButton3 = false;
+
 			} else if (e.key.scancode == mControls.RIGHT_KEY_BIND) {
+				mActiveKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)] = false;
+
 				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_RIGHT)] = false;
-				app().mPhysicsComponent.testButton4 = false;
+
 			} 
 			else if (e.key.scancode == SDL_SCANCODE_MINUS) {
 				ones1 = true;
@@ -83,24 +91,39 @@ void InputManager::Input() {
 			else if (e.key.scancode == SDL_SCANCODE_EQUALS) {
 				ones2 = true;
 			}
+			else if (e.key.scancode == SDL_SCANCODE_UP) {
+				app().mActor.mPhysicsComponent.testButton4 = false;
 
+			}
+			else if (e.key.scancode == SDL_SCANCODE_DOWN) {
+				app().mActor.mPhysicsComponent.testButton3 = false;
+
+			}
 		}
 		const bool* state = SDL_GetKeyboardState(nullptr);
 		if (state[mControls.JUMP_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::SPACE)] = true;
-			app().mPhysicsComponent.testButton1 = true;
+			mActiveKeys[static_cast<int>(ActiveKeys::SPACE)] = true;
+			app().mActor.mPhysicsComponent.testButton1 = true;
 		}
 		if (state[mControls.DUCK_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::DUCK)] = true;
-			app().mPhysicsComponent.testButton2 = true;
+			mActiveKeys[static_cast<int>(ActiveKeys::DUCK)] = true;
+			app().mActor.mPhysicsComponent.testButton2 = true;
 		}
 		if (state[mControls.LEFT_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_LEFT)] = true;
-			app().mPhysicsComponent.testButton3 = true;
+			mActiveKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] = true;
 		}
 		if (state[mControls.RIGHT_KEY_BIND]) {
 			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_RIGHT)] = true;
-			app().mPhysicsComponent.testButton4 = true;
+			mActiveKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)] = true;
+		}
+		if (state[SDL_SCANCODE_UP]) {
+			app().mActor.mPhysicsComponent.testButton4 = true;
+		}
+		if (state[SDL_SCANCODE_DOWN]) {
+			app().mActor.mPhysicsComponent.testButton3 = true;
 		}
 		if (app().mSettings.debugMode) {
 			if (state[SDL_SCANCODE_T]) {

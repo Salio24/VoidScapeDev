@@ -3,6 +3,7 @@
 #include <glm/vec2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../Physics/CollisionHandler.hpp"
+#include "../Physics/PhysicsComponent.hpp"
 
 enum class MovementDirection {
 	None,
@@ -19,7 +20,9 @@ public:
 
 	~Actor();
 
-	void Update() override;
+	void FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
+
+	void Update(double accumulator, double timeStep);
 
 	void Move();
 
@@ -52,6 +55,8 @@ public:
 	float mSizeMultiplier{ 60.0f };
 
 	Box mDoubleJumpOrb;
+
+	PhysicsComponent mPhysicsComponent;
 
 private:
 	glm::vec2 relativePosition{ 0.0f, 0.0f };

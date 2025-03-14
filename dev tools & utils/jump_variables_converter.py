@@ -1,8 +1,7 @@
 import math
 
-
-def compute():
-    print("What to compute? 1 for Total ticks : 2 for Initial inpulse : 3 for Continuous acceleration : 4 for Total jump height")
+def compute(tickrate):
+    print("What to compute? 1 for Total ticks : 2 for Initial impulse : 3 for Continuous acceleration : 4 for Total jump height")
     type = int(input("¿? : "))
 
     if (type == 1):
@@ -15,7 +14,7 @@ def compute():
         I1 = i1 + gd
         I2 = i2 + gu
 
-        dt = 1 / 128
+        dt = 1 / tickrate
 
         ticks = (-2 * I1 * (1 + (I2 / abs(gu))) + math.sqrt(pow((2 * I1 * (1 + (I2 / abs(gu)))), 2) - 4 * I2 * (1 + (I2 / abs(gu))) * (I1 + ((I1 * I1) / abs(gu)) - ((8 * h) / (dt * dt))))) / (2 * I2 * (1 + (I2 / abs(gu))))
 
@@ -33,7 +32,7 @@ def compute():
         
         n = n + 1
         
-        dt = 1 / (128 * 2);
+        dt = 1 / (tickrate * 2);
         
         A1 = 1.0
         B1 = 2 * (n - 1) * I2 + (2 * n - 1) * abs(gu)
@@ -59,7 +58,7 @@ def compute():
         
         n = n + 1
         
-        dt = 1 / (128 * 2);
+        dt = 1 / (tickrate * 2);
         
         A2 = (n - 1)**2
         B2 = (n - 1)**2 * abs(gu) + 2 * (n - 1) * I1
@@ -85,7 +84,7 @@ def compute():
 
         n = n + 1
 
-        dt = 1 / (128 * 2);
+        dt = 1 / (tickrate * 2);
 
         va = (I1 + (n - 1) * I2) * dt;
 
@@ -99,8 +98,21 @@ def compute():
         
 
 def main():
+    print("---------------------------------------------------------------------------------------------------------------------------------")
+    print("| Be aware that these formulas are just approximations and they have some error that can range from 0.01 to 1                   |")
+    print("| I found option 1 to have the lowest error, option 4 around 0.01, options 2, 3 up to 1. Game itself has an error of < 0.000001 |")
+    print("| I assume error may be more or less depending on specific numbers, tho error in this case is static.                           |")
+    print("| When you find numbers that fit, recheck them manually in game, just to be sure                                                |")
+    print("---------------------------------------------------------------------------------------------------------------------------------")
+
+    tickrate = 128
+
+    #tickrate = float(input("Tickrate ?: "))
+    
+    tickrate = tickrate / 2
+
     while (1):
-        compute()
+        compute(tickrate)
         
         print("Again? 1 yes : anything else no")
         ccc = input("¿? : ")

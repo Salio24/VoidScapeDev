@@ -19,8 +19,8 @@ bool StateMachine::CompareToLastState(const PlayerStates& state) {
 
 void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandler) {
 	lastState = mCurrentPlayerState;
-	if (!movementHandler.mIsGrounded && !movementHandler.mCanWallStick && movementHandler.mCanDoubleJump) {
-		if (actor.mVelocity.y > 0.0f) {
+	if (!actor.mPhysicsComponent.mGrounded) {
+		if (actor.mPhysicsComponent.mJumping) {
 			mCurrentPlayerState = PlayerStates::JUMPING;
 			// jump
 		}
@@ -29,23 +29,23 @@ void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandl
 			// fall
 		}
 	}
-	else if (!movementHandler.mIsGrounded && !movementHandler.mCanWallStick && !movementHandler.mCanDoubleJump) {
-		// double jump
-		if (actor.mVelocity.y > 0.0f) {
-			mCurrentPlayerState = PlayerStates::DOUBLE_JUMPING;
-			// jump
-		}
-		else if (actor.mVelocity.y <= 0.0f) {
-			mCurrentPlayerState = PlayerStates::FALLING;
-			// fall
-		}
-	}
-	else if (!movementHandler.mIsGrounded && movementHandler.mCanWallStick) {
-		mCurrentPlayerState = PlayerStates::WALLSLIDING;
-		// wall slide
-	}
+	//else if (!movementHandler.mIsGrounded && !movementHandler.mCanWallStick && !movementHandler.mCanDoubleJump) {
+	//	// double jump
+	//	if (actor.mVelocity.y > 0.0f) {
+	//		mCurrentPlayerState = PlayerStates::DOUBLE_JUMPING;
+	//		// jump
+	//	}
+	//	else if (actor.mVelocity.y <= 0.0f) {
+	//		mCurrentPlayerState = PlayerStates::FALLING;
+	//		// fall
+	//	}
+	//}
+	//else if (!movementHandler.mIsGrounded && movementHandler.mCanWallStick) {
+	//	mCurrentPlayerState = PlayerStates::WALLSLIDING;
+	//	// wall slide
+	//}
 	else {
-		if (!(actor.mVelocity.x < 1.0f && actor.mVelocity.x > -1.0f) && (movementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_LEFT)] || movementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_RIGHT)])) {
+		if (actor.mPhysicsComponent.mActiveRunning) {
 			mCurrentPlayerState = PlayerStates::RUNNING;
 			// run
 		}
@@ -54,7 +54,7 @@ void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandl
 			// idle
 		}
 	}
-	if (movementHandler.mIsSliding && movementHandler.mIsGrounded) {
+	if (actor.mPhysicsComponent.mSliding) {
 		mCurrentPlayerState = PlayerStates::SLIDING;
 		// slide
 	}
@@ -75,7 +75,7 @@ void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandl
 
 void StateMachine::Update(MovementHandler& movementHandler, AnimationHandler& animationHandler, AudioHandler& audioHandler, Actor& actor, const float& deltaTime) {
 	CheckPlayerState(actor, movementHandler);
-	switch (movementHandler.mLookDirection) {
+	switch (actor.mPhysicsComponent.mLookDirection) {
 	case LookDirections::LEFT:
 		mActorFlipped = true;
 		break;

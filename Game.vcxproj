@@ -172,6 +172,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -291,6 +292,7 @@
     <ClInclude Include="Utilities\Sign.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="dev tools &amp; utils\jump_variables_converter.py" />
     <None Include="Graphics\Shaders\fragment\fragmentBackground.glsl" />
     <None Include="Graphics\Shaders\fragment\fragmentBackgroundFramebuffer.glsl" />
     <None Include="Graphics\Shaders\fragment\fragmentGeneral.glsl" />

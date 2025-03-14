@@ -3,6 +3,8 @@
 #include <iostream>
 #include <SDL3/SDL_image.h>
 
+// add some sprite, some struct that will hold, sprite offset in samplerArray index etc, and apply it in draw func
+
 TextureHandler::TextureHandler() {
 	
 }
