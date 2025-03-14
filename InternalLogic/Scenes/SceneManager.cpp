@@ -662,6 +662,13 @@ void SceneManager::ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introM
 		mLevelActive = true;
 		mMainMenuActive = false;
 		break;
+	case Levels::TEST_LEVEL_V2:
+		mLevelScene.mLevelBlocks.clear();
+		mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level_V2.json", tilesetOffset);
+		mCurrentBlocks = &mLevelScene.mLevelBlocks;
+		mLevelActive = true;
+		mMainMenuActive = false;
+		break;
 	default:
 		std::cerr << "Error: ReloadCurrentLevel: Invalid current level" << std::endl;
 		break;
