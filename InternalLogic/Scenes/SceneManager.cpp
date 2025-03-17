@@ -176,6 +176,9 @@ void SceneManager::UpdateUIMenu(int tilesetOffset, float deltaTime, int& windowW
 				if (mUIScenes.mButtonMap["TEST_LEVEL"].GetPressState()) {
 					LoadLevel(Levels::TEST_LEVEL, tilesetOffset, audioHandler->IntroMusic);
 				}
+				if (mUIScenes.mButtonMap["TEST_LEVEL_OLD"].GetPressState()) {
+					LoadLevel(Levels::TEST_LEVEL_OLD, tilesetOffset, audioHandler->IntroMusic);
+				}
 			}
 
 			break;
@@ -657,14 +660,14 @@ void SceneManager::ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introM
 		break;
 	case Levels::TEST_LEVEL:
 		mLevelScene.mLevelBlocks.clear();
-		mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level.json", tilesetOffset);
+		mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level_V2.json", tilesetOffset);
 		mCurrentBlocks = &mLevelScene.mLevelBlocks;
 		mLevelActive = true;
 		mMainMenuActive = false;
 		break;
-	case Levels::TEST_LEVEL_V2:
+	case Levels::TEST_LEVEL_OLD:
 		mLevelScene.mLevelBlocks.clear();
-		mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level_V2.json", tilesetOffset);
+		mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level.json", tilesetOffset);
 		mCurrentBlocks = &mLevelScene.mLevelBlocks;
 		mLevelActive = true;
 		mMainMenuActive = false;

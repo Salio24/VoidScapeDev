@@ -467,6 +467,21 @@ void UIScenes::LoadMainMenuLevelsTab(const int& tilesetOffset, bool debugMode) {
 			mTextToRender.push_back(t);
 			mTextToRender.back().ModelMatrix = &mButtonMap["TEST_LEVEL"].mModelMatrix;
 		}
+		{
+			Button b;
+			Text t;
+
+			b.CreateBoxButtonCentered(glm::ivec2(20, 3), glm::vec2(960.0f, 700.0f) + glm::vec2(-1920.0f, 0.0f), 30, color, tilesetOffset);
+			b.mHoverReactive = true;
+			t.Possition = glm::vec2(960.0f, 700.0f) + glm::vec2(-1920.0f, 0.0f);
+			t.Color = glm::vec3(0.80859375f, 0.80078125f, 0.81640625f);
+			t.TextField = "OLD TEST LEVEL";
+			t.Scale = 0.25f;
+
+			mButtonMap.emplace("TEST_LEVEL_OLD", b);
+			mTextToRender.push_back(t);
+			mTextToRender.back().ModelMatrix = &mButtonMap["TEST_LEVEL_OLD"].mModelMatrix;
+		}
 	} {
 		Button b;
 		Text t;
