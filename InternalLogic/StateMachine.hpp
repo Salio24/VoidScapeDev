@@ -18,6 +18,7 @@ enum class PlayerStates {
 	IDLE,
 	SUCKED,
 	ESCAPED,
+	CROUCHING,
 	END
 };
 

@@ -19,6 +19,9 @@ struct PhysicsSettings {
 	float RunAccelerationMidAir{ 400.0f };
 	float RunSpeedLimit{ 800.0f };
 
+	float CrouchAcceleration{ 1000.0f };
+	float CrouchSpeedLimit{ 200.0f };
+
 	float DefaultFrictionStopSpeed{ 20.0f };
 	float DefaultFriction{ 2000.0f };
 	// values > ~3800.0f are unstable 
@@ -53,6 +56,8 @@ struct PhysicsSettings {
 	int CoyoteTimeTicks{ 12 };
 
 	float WallSlideSpeed{ 125.0f };
+
+	float SlidingCollidorFactor{ 0.75f };
 
 	float Drag{ 0.0f };
 	float Bounce{ 0.0f };
@@ -102,6 +107,9 @@ public:
 
 	bool mFastWallSlide{ false };
 
+	bool mCanStand{ true };
+
+	bool mCrouching{ false };
 
 	PhysicsSettings mPhysicsSettings;
 

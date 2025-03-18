@@ -52,7 +52,7 @@ public:
 
 	bool mIsSuckedPortal{ false };
 
-	float mSizeMultiplier{ 60.0f };
+	float mSizeMultiplier{ 75.0f };
 
 	Box mDoubleJumpOrb;
 

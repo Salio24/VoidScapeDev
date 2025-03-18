@@ -648,7 +648,13 @@ void App::Update() {
 
 
 		// debug
-		mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, mActor.mSprite.mVertexData.Size, glm::vec4(1.0f), mCamera.GetProjectionMatrix(), &mActor.mModelMatrix);
+
+		if (mActor.mPhysicsComponent.mSliding || mActor.mPhysicsComponent.mCrouching) {
+			mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, glm::vec2(mActor.mSprite.mVertexData.Size.x, mActor.mSprite.mVertexData.Size.x * mActor.mPhysicsComponent.mPhysicsSettings.SlidingCollidorFactor), glm::vec4(1.0f), mCamera.GetProjectionMatrix(), &mActor.mModelMatrix);
+		}
+		else {
+			mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, mActor.mSprite.mVertexData.Size, glm::vec4(1.0f), mCamera.GetProjectionMatrix(), &mActor.mModelMatrix);
+		}
 
 		if (mActor.mPhysicsComponent.mJumping) {
 			mBatchRenderer.DrawSeperatly(glm::vec2(200.0f, 900.0f), glm::vec2(20.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), mCamera.GetProjectionMatrix(), &mCamera.mUIModelMatrix);
@@ -664,7 +670,7 @@ void App::Update() {
 		if (!mActor.mDead) {
 			mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mActor.mDoubleJumpOrb.Position, mActor.mDoubleJumpOrb.Size,
 				mTextureHandler.mTilesetLocations.mDoubejumpOrbTileset.second + 1, glm::vec2(0.75f, 0.75f), mActor.mDoubleJumpOrb.TexturePosition, 0.0f, 1.0f, false, &mActor.mModelMatrix);
-			if (mMovementHandler.mCanDoubleJump) {
+			if (mActor.mPhysicsComponent.mDoubleJumpAvailable) {
 				mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mActor.mDoubleJumpOrb.Position, mActor.mDoubleJumpOrb.Size,
 					mTextureHandler.mTilesetLocations.mDoubejumpOrbTileset.second, glm::vec2(0.75f, 0.75f), mActor.mDoubleJumpOrb.TexturePosition, 0.0f, 1.0f, false, &mActor.mModelMatrix);
 			} 

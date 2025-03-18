@@ -46,6 +46,9 @@ void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandl
 			mCurrentPlayerState = PlayerStates::SLIDING;
 			// slide
 		}
+		else if (actor.mPhysicsComponent.mCrouching) {
+			mCurrentPlayerState = PlayerStates::CROUCHING;
+		}
 		else {
 			mCurrentPlayerState = PlayerStates::IDLE;
 			// idle
@@ -171,6 +174,12 @@ void StateMachine::Update(MovementHandler& movementHandler, AnimationHandler& an
 		animationHandler.RunAnimation.index = 0;
 		runAnimationOneShot = true;
 		break;
+	case PlayerStates::CROUCHING:
+		mCurrentActorDrawSize = animationHandler.DuckIdleAnimation.Size * actor.mSizeMultiplier;
+		mCurrentActorTextureSize = animationHandler.DuckIdleAnimation.Size;
+		mCurrentActorTexturePosition = animationHandler.DuckIdleAnimation.TexturePosition;
+		mCurrentActorTextureIndex = animationHandler.DuckIdleAnimation.AnimationTextureIndexes[0];
+			break;
 	case PlayerStates::SLAMMING:
 		mCurrentActorDrawSize = animationHandler.SlamAnimation.Size * actor.mSizeMultiplier;
 		mCurrentActorTextureSize = animationHandler.SlamAnimation.Size;

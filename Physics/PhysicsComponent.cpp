@@ -25,7 +25,7 @@ void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<Ga
 	}
 	//std::cout << normal.x << std::endl;
 	
-	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << glm::to_string(normal) << std::endl;
+	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << glm::to_string(normal) << " " << mCanStand << std::endl;
 }
 
 std::pair<glm::vec2, glm::vec2> PhysicsComponent::Update(double accumulator, double timeStep) {
@@ -47,8 +47,16 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 
 	normal = glm::vec2(0.0f);
 
+	glm::vec2 baseCollderSize = colliderSize;
+
+	if (mSliding || mCrouching) {
+		colliderSize.y = colliderSize.y * mPhysicsSettings.SlidingCollidorFactor;
+	}
+
 	bool rightHugging = false;
 	bool leftHugging = false;
+
+	mCanStand = true;
 
 	// Bottom left corner of broad-phase-box
 	glm::vec2 A(current.position.x - 3 * colliderSize.x, current.position.y - 3 * colliderSize.y);
@@ -69,8 +77,10 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 			else if (mWallHugLeft && VSMath::Physics::RectVsRect(glm::vec2(current.position.x - colliderSize.x / 4, current.position.y), colliderSize, block.mSprite.mVertexData.Position, block.mSprite.mVertexData.Size)) {
 				leftHugging = true;
 			}
+			if (VSMath::Physics::RectVsRect(current.position, baseCollderSize, block.mSprite.mVertexData.Position, block.mSprite.mVertexData.Size)) {
+				mCanStand = false;
+			}
 		}
-
 	}
 
 	if (normal.y == 1) {
@@ -78,7 +88,7 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 	}
 	else {
 		mGrounded = false;
-	}
+	} 
 
 	if (!rightHugging && mWallHugRight) {
 		mWallHugRight = false;
@@ -87,13 +97,12 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 		mWallHugLeft = false;
 	}
 
-	if (normal.x == -1) {
+	if (normal.x == -1 && current.velocity.y < 0.0f) {
 		mWallHugRight = true;
 	} 
-	else if (normal.x == 1) {
+	else if (normal.x == 1 && current.velocity.y < 0.0f) {
 		mWallHugLeft = true;
 	}
-
 }
 
 void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep) {
@@ -119,16 +128,20 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		mLookDirection = LookDirections::RIGHT;
 	}
 
+	if (!mCanStand) {
+		mCrouching = true;
+	}
+
 	// Movement on X-axis (run) on ground and mid air
 	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
-		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit && !mSliding) {
+		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit && !mSliding && !mCrouching) {
 			if (mGrounded) {
 				if (current.velocity.x - mPhysicsSettings.RunAccelerationOnFoot * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
 					acceleration.x += -mPhysicsSettings.RunAccelerationOnFoot;
 				}
 				else if (current.velocity.x < 0.0f) {
 					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
-				} 
+				}
 			}
 			else {
 				if (current.velocity.x - mPhysicsSettings.RunAccelerationMidAir * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
@@ -142,10 +155,23 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		else if (current.velocity.x < -mPhysicsSettings.RunSpeedLimit && mGrounded) {
 			acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
 		}
+
+		if (current.velocity.x > -mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			if (current.velocity.x - mPhysicsSettings.CrouchAcceleration * timeStep >= -mPhysicsSettings.CrouchSpeedLimit) {
+				acceleration.x += -mPhysicsSettings.CrouchAcceleration;
+			}
+			else if (current.velocity.x < 0.0f) {
+				acceleration.x += -(current.velocity.x + mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+			}
+		}
+		else if (current.velocity.x < -mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			acceleration.x += -(current.velocity.x + mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+		}
+
 		mLookDirection = LookDirections::LEFT;
 	}
 	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) {
-		if (current.velocity.x < mPhysicsSettings.RunSpeedLimit && !mSliding) {
+		if (current.velocity.x < mPhysicsSettings.RunSpeedLimit && !mSliding && !mCrouching) {
 			if (mGrounded) {
 				if (current.velocity.x + mPhysicsSettings.RunAccelerationOnFoot * timeStep <= mPhysicsSettings.RunSpeedLimit) {
 					acceleration.x += mPhysicsSettings.RunAccelerationOnFoot;
@@ -166,12 +192,25 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		else if (current.velocity.x > mPhysicsSettings.RunSpeedLimit && mGrounded) {
 			acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
 		}
+
+		if (current.velocity.x < mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			if (current.velocity.x + mPhysicsSettings.CrouchAcceleration * timeStep <= mPhysicsSettings.CrouchSpeedLimit) {
+				acceleration.x += mPhysicsSettings.CrouchAcceleration;
+			}
+			else if (current.velocity.x > 0.0f) {
+				acceleration.x += -(current.velocity.x - mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+			}
+		}
+		else if (current.velocity.x > mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			acceleration.x += -(current.velocity.x - mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+		}
+
 		mLookDirection = LookDirections::RIGHT;
 	}
 
 	mActiveRunning = false;
 	mPassiveRunning = false;
-	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded && !mSliding) {
+	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded && !mSliding && !mCrouching) {
 		mActiveRunning = true;
 	}
 	else if (!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded) {
@@ -231,6 +270,9 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 
 					mSliding = true;
 				}
+				else if (current.velocity.x > -mPhysicsSettings.ThresholdSpeedToSlide && current.velocity.x <= 0.0f) {
+					mCrouching = true;
+				}
 				
 				
 				break;
@@ -240,7 +282,9 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 
 					mSliding = true;
 				}
-
+				else if (current.velocity.x < mPhysicsSettings.ThresholdSpeedToSlide && current.velocity.x >= 0.0f) {
+					mCrouching = true;
+				}
 
 				break;
 			default:
@@ -253,7 +297,14 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		}
 	}
 	else {
+		if (mCanStand) {
+			mCrouching = false;
+		}
 		mSliding = false;
+	}
+	if (mSliding && std::abs(current.velocity.x) < 250.0f) {
+		mSliding = false;
+		mCrouching = true;
 	}
 
 	if (mGrounded) {
