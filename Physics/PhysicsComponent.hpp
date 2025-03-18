@@ -58,9 +58,6 @@ struct PhysicsSettings {
 	float WallSlideSpeed{ 125.0f };
 
 	float SlidingCollidorFactor{ 0.75f };
-
-	float Drag{ 0.0f };
-	float Bounce{ 0.0f };
 };
 
 class PhysicsComponent {

@@ -10,19 +10,11 @@ PhysicsComponent::~PhysicsComponent() {
 
 void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], glm::vec2 colliderSize) {
 
-	// add 2 distinct structs, static box and dynamic box
-
-	// separate integration, collision function (functions that are not tightly bond to acter), into a separate file, and make them static
-
 	previous = current;
 	MovementUpdate(activeKeys, timeStep);
 	VSMath::RK4_IntegrateVec2(current, 0.0f, timeStep, acceleration);
 	CollisionUpdate(blocks, colliderSize);
 
-
-	if (current.position.y > 640.0f) {
-
-	}
 	//std::cout << normal.x << std::endl;
 	
 	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
@@ -445,9 +437,6 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	}
 	if (!mGrounded) {
 		mSliding = false;
-	}
-	if (testButton3) {
-		
 	}
 
 	// todo, global speed limits
