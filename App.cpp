@@ -240,7 +240,7 @@ void App::PostStartUp() {
 void App::LoadGame(const bool retry) {
 	mBlackHole.Reset();
 	mStateMachine.Reset();
-	mActor.Reset(mAnimationHandler.FallAnimation.Size, glm::vec2(400.0f, 350.0f));
+	mActor.Reset(mAnimationHandler.FallAnimation.Size, glm::vec2(770.0f, 350.0f));
 	mSceneManager.mUIScenes.mTitleScreenActive = false;
 	// reset movement handler
 	mMovementHandler.mLookDirection = LookDirections::RIGHT;

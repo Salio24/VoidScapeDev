@@ -61,8 +61,8 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <OutDir>$(SolutionDir)x64\Debug\</OutDir>
-    <IntDir>$(SolutionDir)x64\Intermediate\</IntDir>
+    <OutDir>$(SolutionDir)Builds\x64\Debug\</OutDir>
+    <IntDir>$(SolutionDir)Builds\x64\Intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -70,8 +70,8 @@
     <PlatformToolset>ClangCL</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <OutDir>$(SolutionDir)x64\Release\</OutDir>
-    <IntDir>$(SolutionDir)x64\Intermediate\</IntDir>
+    <OutDir>$(SolutionDir)Builds\x64\Release\</OutDir>
+    <IntDir>$(SolutionDir)Builds\x64\Intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='OptimizedDebug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -79,8 +79,8 @@
     <PlatformToolset>ClangCL</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <OutDir>$(SolutionDir)x64\OptimisedDebug\</OutDir>
-    <IntDir>$(SolutionDir)x64\Intermediate\</IntDir>
+    <OutDir>$(SolutionDir)Builds\x64\OptimisedDebug\</OutDir>
+    <IntDir>$(SolutionDir)Builds\x64\Intermediate\</IntDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -315,4 +315,24 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <Target Name="AfterBuild">
+    <!-- Copy SDL3.dll -->
+    <Exec Command="xcopy /Y /D /I &quot;$(ProjectDir)lib\SDL3.dll&quot; &quot;$(OutDir)&quot;" />
+    <!-- Copy SDL3_image.dll -->
+    <Exec Command="xcopy /Y /D /I &quot;$(ProjectDir)lib\SDL3_image.dll&quot; &quot;$(OutDir)&quot;" />
+    <!-- Copy SDL3_mixer.dll -->
+    <Exec Command="xcopy /Y /D /I &quot;$(ProjectDir)lib\SDL3_mixer.dll&quot; &quot;$(OutDir)&quot;" />
+    <!-- Copy freetype.dll from the root folder -->
+    <Exec Command="xcopy /Y /D /I &quot;$(ProjectDir)lib\freetype.dll&quot; &quot;$(OutDir)&quot;" />
+    <!-- Copy the levels folder with its subdirectories -->
+    <Exec Command="xcopy /Y /D /I /E &quot;$(ProjectDir)levels&quot; &quot;$(OutDir)levels&quot;" />
+    <!-- Copy the assets folder with its subdirectories -->
+    <Exec Command="xcopy /Y /D /I /E &quot;$(ProjectDir)assets&quot; &quot;$(OutDir)assets&quot;" />
+    <!-- Copy the saveData folder with its subdirectories -->
+    <Exec Command="xcopy /Y /D /I /E &quot;$(ProjectDir)saveData&quot; &quot;$(OutDir)saveData&quot;" />
+    <!-- Copy the Graphics\Shaders\fragment folder -->
+    <Exec Command="xcopy /Y /D /I /E &quot;$(ProjectDir)Graphics\Shaders\fragment&quot; &quot;$(OutDir)Graphics\Shaders\fragment&quot;" />
+    <!-- Copy the Graphics\Shaders\vertex folder -->
+    <Exec Command="xcopy /Y /D /I /E &quot;$(ProjectDir)Graphics\Shaders\vertex&quot; &quot;$(OutDir)Graphics\Shaders\vertex&quot;" />
+  </Target>
 </Project>

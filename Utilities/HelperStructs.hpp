@@ -9,7 +9,7 @@ using json = nlohmann::json;
 enum class Levels {
 	LEVEL_1,
 	TEST_LEVEL,
-	TEST_LEVEL_V2,
+	TEST_LEVEL_OLD,
 	END
 };
 

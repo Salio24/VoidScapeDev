@@ -4,6 +4,7 @@
 /Debug/
 /Release/
 /x64
+/Builds
 
 # Libraries
 /include
