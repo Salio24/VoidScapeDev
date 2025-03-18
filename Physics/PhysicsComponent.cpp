@@ -25,7 +25,7 @@ void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<Ga
 	}
 	//std::cout << normal.x << std::endl;
 	
-	//std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
+	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << glm::to_string(normal) << std::endl;
 }
 
 std::pair<glm::vec2, glm::vec2> PhysicsComponent::Update(double accumulator, double timeStep) {
@@ -171,7 +171,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 
 	mActiveRunning = false;
 	mPassiveRunning = false;
-	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded) {
+	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded && !mSliding) {
 		mActiveRunning = true;
 	}
 	else if (!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded) {
@@ -219,6 +219,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	}
 
 	// Slide
+	mFastWallSlide = false;
 	if (activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
 		if (mDuckOneShot && mGrounded) {
 			
@@ -248,8 +249,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 			mDuckOneShot = false;
 		} 
 		else if (mWallHugRight || mWallHugLeft) {
-			mWallHugRight = false;
-			mWallHugLeft = false;
+			mFastWallSlide = true;
 		}
 	}
 	else {
@@ -269,8 +269,6 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	else {
 		mCoyoteTimeActive = false;
 	}
-
-	std::cout << mCoyoteTimeActive << std::endl;
 
 	if (activeKeys[static_cast<int>(ActiveKeys::SPACE)]) {
 		if (mDoubleJumping && doubleJumpTickTimer < mPhysicsSettings.VariableDoubleJumpTicks) {
@@ -330,7 +328,10 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	if (mWallHugRight) {
 		mDoubleJumpAvailable = true;
 
-		acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
+		if (!mFastWallSlide) {
+			acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
+		}
+
 		if (current.velocity.x < 0.0f) {
 			mWallHugRight = false;
 		}
@@ -338,7 +339,10 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	else if (mWallHugLeft) {
 		mDoubleJumpAvailable = true;
 
-		acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
+		if (!mFastWallSlide) {
+			acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
+		}
+
 		if (current.velocity.x > 0.0f) {
 			mWallHugLeft = false;
 		}

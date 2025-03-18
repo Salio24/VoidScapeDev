@@ -22,55 +22,48 @@ void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandl
 	if (!actor.mPhysicsComponent.mGrounded) {
 		if (actor.mPhysicsComponent.mJumping) {
 			mCurrentPlayerState = PlayerStates::JUMPING;
-			// jump
+		}
+		else if (actor.mPhysicsComponent.mDoubleJumping) {
+			mCurrentPlayerState = PlayerStates::DOUBLE_JUMPING;
+		}
+		else if (actor.mPhysicsComponent.mWallJumping) {
+			mCurrentPlayerState = PlayerStates::JUMPING;
+		}
+		else if (actor.mPhysicsComponent.mWallHugRight || actor.mPhysicsComponent.mWallHugLeft) {
+			mCurrentPlayerState = PlayerStates::WALLSLIDING;
+			// wall slide
 		}
 		else if (actor.mVelocity.y <= 0.0f) {
 			mCurrentPlayerState = PlayerStates::FALLING;
-			// fall
 		}
 	}
-	//else if (!movementHandler.mIsGrounded && !movementHandler.mCanWallStick && !movementHandler.mCanDoubleJump) {
-	//	// double jump
-	//	if (actor.mVelocity.y > 0.0f) {
-	//		mCurrentPlayerState = PlayerStates::DOUBLE_JUMPING;
-	//		// jump
-	//	}
-	//	else if (actor.mVelocity.y <= 0.0f) {
-	//		mCurrentPlayerState = PlayerStates::FALLING;
-	//		// fall
-	//	}
-	//}
-	//else if (!movementHandler.mIsGrounded && movementHandler.mCanWallStick) {
-	//	mCurrentPlayerState = PlayerStates::WALLSLIDING;
-	//	// wall slide
-	//}
 	else {
 		if (actor.mPhysicsComponent.mActiveRunning) {
 			mCurrentPlayerState = PlayerStates::RUNNING;
 			// run
+		}
+		else if (actor.mPhysicsComponent.mSliding) {
+			mCurrentPlayerState = PlayerStates::SLIDING;
+			// slide
 		}
 		else {
 			mCurrentPlayerState = PlayerStates::IDLE;
 			// idle
 		}
 	}
-	if (actor.mPhysicsComponent.mSliding) {
-		mCurrentPlayerState = PlayerStates::SLIDING;
-		// slide
-	}
-	if (movementHandler.mIsSlamming) {
-		mCurrentPlayerState = PlayerStates::SLAMMING;
-		// slam
-	} 
-	if (actor.mDead) {
-		mCurrentPlayerState = PlayerStates::DEAD;
-	}
-	if (actor.mIsSucked || actor.mIsSuckedPortal) {
-		mCurrentPlayerState = PlayerStates::SUCKED;
-	}
-	if (actor.mEscaped) {
-		mCurrentPlayerState = PlayerStates::ESCAPED;
-	}
+	//if (movementHandler.mIsSlamming) {
+	//	mCurrentPlayerState = PlayerStates::SLAMMING;
+	//	// slam
+	//} 
+	//if (actor.mDead) {
+	//	mCurrentPlayerState = PlayerStates::DEAD;
+	//}
+	//if (actor.mIsSucked || actor.mIsSuckedPortal) {
+	//	mCurrentPlayerState = PlayerStates::SUCKED;
+	//}
+	//if (actor.mEscaped) {
+	//	mCurrentPlayerState = PlayerStates::ESCAPED;
+	//}
 }
 
 void StateMachine::Update(MovementHandler& movementHandler, AnimationHandler& animationHandler, AudioHandler& audioHandler, Actor& actor, const float& deltaTime) {

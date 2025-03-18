@@ -100,6 +100,8 @@ public:
 
 	bool mWallJumping{ false };
 
+	bool mFastWallSlide{ false };
+
 
 	PhysicsSettings mPhysicsSettings;
 
