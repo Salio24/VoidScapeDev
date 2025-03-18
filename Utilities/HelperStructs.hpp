@@ -26,6 +26,19 @@ enum class LookDirections {
 	END
 };
 
+struct PhysicsState
+{
+	glm::vec2 position{ 0.0f };
+	glm::vec2 velocity{ 0.0f };
+};
+
+struct Derivative
+{
+	glm::vec2 dpos{ 0.0f };
+	glm::vec2 dvel{ 0.0f };
+};
+
+
 struct Box {
 	glm::vec2 Position;
 	glm::vec4 Color;

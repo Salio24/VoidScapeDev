@@ -156,6 +156,9 @@
     <ClCompile Include="src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Physics\VSMath.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actors\EscapePortal.hpp">
@@ -238,6 +241,9 @@
     </ClInclude>
     <ClInclude Include="App.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\VSMath.hpp">
+      <Filter>Header Files\Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

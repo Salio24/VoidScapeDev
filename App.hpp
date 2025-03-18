@@ -110,8 +110,6 @@ public:
 
 	bool testReset{ false };
 
-	float testSpeeed{ 0.0f };
-
 private: 
 	App();
 

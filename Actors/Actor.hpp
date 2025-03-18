@@ -20,7 +20,7 @@ public:
 
 	~Actor();
 
-	void FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
+	void FixedTickrateUpdate(double timeStep, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
 
 	void Update(double accumulator, double timeStep);
 

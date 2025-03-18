@@ -7,6 +7,7 @@
 #include "../Utilities/Sign.hpp"
 #include "../Utilities/HelperStructs.hpp"
 #include "../Actors/GameObject.hpp"
+#include "VSMath.hpp"
 
 
 struct PhysicsSettings {
@@ -35,23 +36,24 @@ struct PhysicsSettings {
 
 	float JumpStartImpulse{ 50000.0f };
 	float JumpContinuousAcceleration{ 2000.0f };
+
+	float DoubleJumpStartImpulse{ 50000.0f };
+	float DoubleJumpContinuousAcceleration{ 2000.0f };
+
+	float WallJumpStartImpulse{ 50000.0f };
+	float WallJumpStartSideImpulse{ 50000.0f };
+	float WallJumpContinuousAcceleration{ 2000.0f };
+
 	int VariableJumpTicks{ 32 };
-	int JumpBufferTime{ 200 };
+	int VariableDoubleJumpTicks{ 32 };
+	int VariableWallJumpTicks{ 32 };
+
+	int JumpBufferTicks{ 25 };
+
+	float WallSlideSpeed{ 125.0f };
 
 	float Drag{ 0.0f };
 	float Bounce{ 0.0f };
-};
-
-struct PhysicsState
-{
-	glm::vec2 position{ 0.0f };
-	glm::vec2 velocity{ 0.0f };
-};
-
-struct Derivative
-{
-	glm::vec2 PositionDerivative{ 0.0f };
-	glm::vec2 VelocityDerivative{ 0.0f };
 };
 
 class PhysicsComponent {
@@ -60,43 +62,21 @@ public:
 
 	~PhysicsComponent();
 
-	glm::vec2 MultiplyVec2AndDouble(glm::vec2 vec, double d) const;
-
-	Derivative RK4_EvaluateVec2(PhysicsState& initial, double time, double timeStep, const Derivative& d);
-
-	glm::vec2 RK4_AccelerationVec2(const PhysicsState& state, double time);
-
-	void RK4_IntegrateVec2(PhysicsState& state, double time, double timeStep);
-
-	void FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], glm::vec2 colliderSize);
+	void FixedTickrateUpdate(double timeStep, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], glm::vec2 colliderSize);
 
 	std::pair<glm::vec2, glm::vec2> Update(double accumulator, double timeStep);
 
 	void SetPosition(glm::vec2 position);
 
-	bool PointVsRect(const glm::vec2& point, const glm::vec2& boxSize, const glm::vec2& boxPos);
+	void CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 colliderSize);
 
-	bool RectVsRect(const glm::vec2 rect1Pos, const glm::vec2 rect1Size, const glm::vec2 rect2Pos, const glm::vec2 rect2Size);
-
-	bool RayVsRect(const glm::vec2& rayOrigin, const glm::vec2& rayDirection, const Box* target, glm::vec2& contactPoint, glm::vec2& contactNormal, float& hitTimeNear);
-
-	void CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 previousPos, glm::vec2& currentPos, glm::vec2& velocity, double timeStep, glm::vec2 colliderSize);
-
-	void ResolvePenetration(const std::vector<GameObject>* blocks, glm::vec2& position, glm::vec2& velocity, glm::vec2 size);
-
-	void MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
-
-	glm::vec2 testV{ 0.0f };
-	PhysicsState mInterpolatedState;
-
-	glm::vec2 pos = glm::vec2(0.0f, 800.0f);
+	void MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
 
 	LookDirections mLookDirection = LookDirections::RIGHT;
 
-	bool testButton1{ false };
-	bool testButton2{ false };
-	bool testButton3{ false };
-	bool testButton4{ false };
+	bool mWallHugLeft{ false };
+
+	bool mWallHugRight{ false };
 
 	bool mGrounded{ false };
 
@@ -110,14 +90,12 @@ public:
 	// passive movement on ground (no input)
 	bool mPassiveRunning{ false };
 
+	bool mDoubleJumpAvailable{ false };
 
-	
+	bool mDoubleJumping{ false };
 
-	glm::vec2 accF{ 0.0f };
+	bool mWallJumping{ false };
 
-	glm::vec2 testPos{ 0.0f };	
-	
-	std::vector<glm::vec2> collBlocks;
 
 	PhysicsSettings mPhysicsSettings;
 
@@ -125,25 +103,26 @@ public:
 
 	bool mDuckOneShot{ true };
 
+	bool testButton4{ false };
+	bool testButton3{ false };
+
 
 private:
-	double time = 0.0f;
-	double accumulator = 0.0f;
-	double timeStep = 1.0f / 128.0f;
-
 	glm::vec2 acceleration{ 0.0f };
 
 	PhysicsState previous;
 	PhysicsState current;
 
 	glm::vec2 normal;
-	glm::vec2 fric;
 
-	int jumpTickTimer{ 0 };
+	int jumpTickTimer{ -1 };
 
-	std::chrono::time_point < std::chrono::steady_clock, std::chrono::duration<long long, std::ratio < 1, 1000000000>>> jumpBufferTimer;
+	int doubleJumpTickTimer{ -1 };
 
-	glm::vec2 colAcc{ 0.0f };
+	int wallJumpTickTimer{ -1 };
 
+	//std::chrono::time_point < std::chrono::steady_clock, std::chrono::duration<long long, std::ratio < 1, 1000000000>>> jumpBufferTimer;
+
+	int jumpBufferTimer{ -1 };
 };
 

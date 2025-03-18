@@ -12,8 +12,8 @@ void Actor::Transform() {
 	mModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(relativePosition, 0.0f));
 }
 
-void Actor::FixedTickrateUpdate(double deltaTime, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
-	mPhysicsComponent.FixedTickrateUpdate(deltaTime, blocks, activeKeys, mSprite.mVertexData.Size);
+void Actor::FixedTickrateUpdate(double timeStep, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
+	mPhysicsComponent.FixedTickrateUpdate(timeStep, blocks, activeKeys, mSprite.mVertexData.Size);
 }
 
 void Actor::Update(double accumulator, double timeStep) {

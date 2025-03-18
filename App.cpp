@@ -352,11 +352,6 @@ void App::UpdatePlayground(float deltaTime) {
 	//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.mInterpolatedState.position, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &ttt);
 
 
-	for (int i = 0; i < mPhysicsComponent.collBlocks.size(); i++) {
-		mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.collBlocks[i], glm::vec2(18.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &ttt);
-	}
-
-
 	//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mPhysicsComponent.testPos, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
 		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), pos, glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, &mCamera.mUIModelMatrix);
 		//mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), glm::vec2(state.x, 800.0f), glm::vec2(40.0f), 0, glm::vec2(0.01f), glm::vec2(0.0f), 0, 1.0f, false, & mCamera.mUIModelMatrix);
@@ -365,7 +360,7 @@ void App::UpdatePlayground(float deltaTime) {
 }
 
 void App::TickRateUpdate() {
-	mActor.FixedTickrateUpdate(deltaTime, mSceneManager.mCurrentBlocks, mInputManager.mActiveKeys);
+	mActor.FixedTickrateUpdate(timeStep, mSceneManager.mCurrentBlocks, mInputManager.mActiveKeys);
 
 }
 
