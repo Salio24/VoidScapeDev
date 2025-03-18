@@ -44,7 +44,7 @@ struct PhysicsSettings {
 	float DoubleJumpContinuousAcceleration{ 2000.0f };
 
 	float WallJumpStartImpulse{ 50000.0f };
-	float WallJumpStartSideImpulse{ 50000.0f };
+	float WallJumpStartSideImpulse{ 25000.0f };
 	float WallJumpContinuousAcceleration{ 2000.0f };
 
 	int VariableJumpTicks{ 32 };

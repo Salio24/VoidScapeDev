@@ -25,7 +25,7 @@ void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<Ga
 	}
 	//std::cout << normal.x << std::endl;
 	
-	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << glm::to_string(normal) << " " << mCanStand << std::endl;
+	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
 }
 
 std::pair<glm::vec2, glm::vec2> PhysicsComponent::Update(double accumulator, double timeStep) {
@@ -63,23 +63,27 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 	// Top right corner of broad-phase-box
 	glm::vec2 B(current.position.x + 4 * colliderSize.x, current.position.y + 4 * colliderSize.y);
 	
-	for (const auto& block : *blocks) {
-		if (!block.mIsDeathTrigger && block.mIsCollidable && block.mSprite.mVertexData.Position.x > A.x && block.mSprite.mVertexData.Position.x < B.x && block.mSprite.mVertexData.Position.y > A.y && block.mSprite.mVertexData.Position.y < B.y) {
-			VSMath::Physics::ResolvePenetrationOnY(current.position, current.velocity, colliderSize, block.mSprite.mVertexData.Position, block.mSprite.mVertexData.Size, normal);
+	std::vector<int> bpb;
+	
+	for (int i = 0; i < blocks->size(); i++) {
+		if (!blocks->at(i).mIsDeathTrigger && blocks->at(i).mIsCollidable && blocks->at(i).mSprite.mVertexData.Position.x > A.x && blocks->at(i).mSprite.mVertexData.Position.x < B.x && blocks->at(i).mSprite.mVertexData.Position.y > A.y && blocks->at(i).mSprite.mVertexData.Position.y < B.y) {
+			bpb.push_back(i);
 		}
 	}
-	for (const auto& block : *blocks) {
-		if (!block.mIsDeathTrigger && block.mIsCollidable && block.mSprite.mVertexData.Position.x > A.x && block.mSprite.mVertexData.Position.x < B.x && block.mSprite.mVertexData.Position.y > A.y && block.mSprite.mVertexData.Position.y < B.y) {
-			VSMath::Physics::ResolvePenetrationOnX(current.position, current.velocity, colliderSize, block.mSprite.mVertexData.Position, block.mSprite.mVertexData.Size, normal);
-			if (mWallHugRight && VSMath::Physics::RectVsRect(glm::vec2(current.position.x + colliderSize.x / 4, current.position.y), colliderSize, block.mSprite.mVertexData.Position, block.mSprite.mVertexData.Size)) {
-				rightHugging = true;
-			}
-			else if (mWallHugLeft && VSMath::Physics::RectVsRect(glm::vec2(current.position.x - colliderSize.x / 4, current.position.y), colliderSize, block.mSprite.mVertexData.Position, block.mSprite.mVertexData.Size)) {
-				leftHugging = true;
-			}
-			if (VSMath::Physics::RectVsRect(current.position, baseCollderSize, block.mSprite.mVertexData.Position, block.mSprite.mVertexData.Size)) {
-				mCanStand = false;
-			}
+	
+	for (auto blockID : bpb) {
+		VSMath::Physics::ResolvePenetrationOnY(current.position, current.velocity, colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size, normal);
+	}
+	for (auto blockID : bpb) {
+		VSMath::Physics::ResolvePenetrationOnX(current.position, current.velocity, colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size, normal);
+		if (mWallHugRight && VSMath::Physics::RectVsRect(glm::vec2(current.position.x + colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+			rightHugging = true;
+		}
+		else if (mWallHugLeft && VSMath::Physics::RectVsRect(glm::vec2(current.position.x - colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+			leftHugging = true;
+		}
+		if (VSMath::Physics::RectVsRect(current.position, baseCollderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+			mCanStand = false;
 		}
 	}
 
@@ -136,6 +140,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
 		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit && !mSliding && !mCrouching) {
 			if (mGrounded) {
+				// run
 				if (current.velocity.x - mPhysicsSettings.RunAccelerationOnFoot * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
 					acceleration.x += -mPhysicsSettings.RunAccelerationOnFoot;
 				}
@@ -144,6 +149,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 				}
 			}
 			else {
+				// mid air
 				if (current.velocity.x - mPhysicsSettings.RunAccelerationMidAir * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
 					acceleration.x += -mPhysicsSettings.RunAccelerationMidAir;
 				}
@@ -156,6 +162,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 			acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
 		}
 
+		// crouch
 		if (current.velocity.x > -mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
 			if (current.velocity.x - mPhysicsSettings.CrouchAcceleration * timeStep >= -mPhysicsSettings.CrouchSpeedLimit) {
 				acceleration.x += -mPhysicsSettings.CrouchAcceleration;
@@ -208,6 +215,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		mLookDirection = LookDirections::RIGHT;
 	}
 
+	// for state machine
 	mActiveRunning = false;
 	mPassiveRunning = false;
 	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded && !mSliding && !mCrouching) {
@@ -307,6 +315,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		mCrouching = true;
 	}
 
+	// coyote tome
 	if (mGrounded) {
 		coyoteTimeTimer = 0;
 	}
@@ -321,6 +330,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		mCoyoteTimeActive = false;
 	}
 
+	// jumps etc
 	if (activeKeys[static_cast<int>(ActiveKeys::SPACE)]) {
 		if (mDoubleJumping && doubleJumpTickTimer < mPhysicsSettings.VariableDoubleJumpTicks) {
 			doubleJumpTickTimer++;
@@ -399,9 +409,6 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		}
 	}
 
-	if (mWallJumping) {
-	}
-
 	if ((mGrounded || mCoyoteTimeActive) && jumpBufferTimer < mPhysicsSettings.JumpBufferTicks) {
 		if (mCoyoteTimeActive) {
 			coyoteTimeTimer += 1000;
@@ -416,6 +423,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		acceleration.y += mPhysicsSettings.JumpStartImpulse;
 		mGrounded = false;
 	}
+
 	jumpBufferTimer++;
 
 	if (mGrounded) {
