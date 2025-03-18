@@ -57,3 +57,4 @@ Game/Game/Game.vcxproj.user
 Game/Game/x64
 /Game.vcxproj.user
 *.TMP
+/levels/Levels.tiled-session

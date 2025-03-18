@@ -234,6 +234,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Physics\VSMath.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="Actors\Actor.cpp" />
     <ClCompile Include="Actors\BlackHole.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="Physics\CollisionHandler.hpp" />
     <ClInclude Include="Physics\MovementHandler.hpp" />
     <ClInclude Include="Physics\PhysicsComponent.hpp" />
+    <ClInclude Include="Physics\VSMath.hpp" />
     <ClInclude Include="Utilities\AudioHandler.hpp" />
     <ClInclude Include="Utilities\HelperStructs.hpp" />
     <ClInclude Include="Utilities\Input.hpp" />

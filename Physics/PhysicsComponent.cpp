@@ -25,7 +25,7 @@ void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<Ga
 	}
 	//std::cout << normal.x << std::endl;
 	
-	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
+	//std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
 }
 
 std::pair<glm::vec2, glm::vec2> PhysicsComponent::Update(double accumulator, double timeStep) {
@@ -85,7 +85,6 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 	}
 	else if (!leftHugging && mWallHugLeft) {
 		mWallHugLeft = false;
-		std::cout << "aaa" << std::endl;
 	}
 
 	if (normal.x == -1) {
@@ -257,6 +256,22 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		mSliding = false;
 	}
 
+	if (mGrounded) {
+		coyoteTimeTimer = 0;
+	}
+	else if (coyoteTimeTimer < 500) {
+		coyoteTimeTimer++;
+	}
+
+	if (coyoteTimeTimer < mPhysicsSettings.CoyoteTimeTicks && !mJumping && !mGrounded) {
+		mCoyoteTimeActive = true;
+	}
+	else {
+		mCoyoteTimeActive = false;
+	}
+
+	std::cout << mCoyoteTimeActive << std::endl;
+
 	if (activeKeys[static_cast<int>(ActiveKeys::SPACE)]) {
 		if (mDoubleJumping && doubleJumpTickTimer < mPhysicsSettings.VariableDoubleJumpTicks) {
 			doubleJumpTickTimer++;
@@ -269,7 +284,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		if (mSpacebarOneShot) {
 
 			if (!(mWallHugLeft || mWallHugRight)) {
-				if (!mGrounded && mDoubleJumpAvailable) {
+				if (!mGrounded && mDoubleJumpAvailable && !mCoyoteTimeActive) {
 					mDoubleJumpAvailable = false;
 					mDoubleJumping = true;
 					doubleJumpTickTimer = 0;
@@ -332,7 +347,12 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	if (mWallJumping) {
 	}
 
-	if (mGrounded && jumpBufferTimer < mPhysicsSettings.JumpBufferTicks) {
+	if ((mGrounded || mCoyoteTimeActive) && jumpBufferTimer < mPhysicsSettings.JumpBufferTicks) {
+		if (mCoyoteTimeActive) {
+			coyoteTimeTimer += 1000;
+			acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
+		}
+
 		jumpBufferTimer += 1000.0f;
 		mJumping = true;
 

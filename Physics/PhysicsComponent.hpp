@@ -50,6 +50,8 @@ struct PhysicsSettings {
 
 	int JumpBufferTicks{ 25 };
 
+	int CoyoteTimeTicks{ 12 };
+
 	float WallSlideSpeed{ 125.0f };
 
 	float Drag{ 0.0f };
@@ -79,6 +81,8 @@ public:
 	bool mWallHugRight{ false };
 
 	bool mGrounded{ false };
+
+	bool mCoyoteTimeActive{ false };
 
 	bool mSliding{ false };
 
@@ -121,8 +125,8 @@ private:
 
 	int wallJumpTickTimer{ -1 };
 
-	//std::chrono::time_point < std::chrono::steady_clock, std::chrono::duration<long long, std::ratio < 1, 1000000000>>> jumpBufferTimer;
-
 	int jumpBufferTimer{ -1 };
+
+	int coyoteTimeTimer{ -1 };
 };
 
