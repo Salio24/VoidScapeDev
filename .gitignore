@@ -58,3 +58,4 @@ Game/Game/x64
 /Game.vcxproj.user
 *.TMP
 /levels/Levels.tiled-session
+/levels/GameLevels/32p/test.tmx

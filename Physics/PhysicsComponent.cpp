@@ -59,7 +59,10 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 	
 	for (int i = 0; i < blocks->size(); i++) {
 		if (!blocks->at(i).mIsDeathTrigger && blocks->at(i).mIsCollidable && blocks->at(i).mSprite.mVertexData.Position.x > A.x && blocks->at(i).mSprite.mVertexData.Position.x < B.x && blocks->at(i).mSprite.mVertexData.Position.y > A.y && blocks->at(i).mSprite.mVertexData.Position.y < B.y) {
+		}
+		if (blocks->at(i).mIsCollidable) {
 			bpb.push_back(i);
+
 		}
 	}
 	
@@ -437,6 +440,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 	}
 	if (!mGrounded) {
 		mSliding = false;
+		mCrouching = false;
 	}
 
 	// todo, global speed limits

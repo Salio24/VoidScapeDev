@@ -9,7 +9,7 @@ SceneManager::~SceneManager() {
 
 }
 
-void SceneManager::UpdateUIMenu(int tilesetOffset, float deltaTime, int& windowWidth, int& windowHeight, bool& quit, std::vector<std::string>& windowModes, std::vector<glm::ivec2>& resolutions, SDL_Window* window) {
+void SceneManager::UpdateUIMenu(int tilesetOffset, float deltaTime, int& windowWidth, int& windowHeight, bool& quit, std::vector<std::string>& windowModes, std::vector<glm::ivec2>& resolutions, SDL_Window* window, bool& restart, bool& reload, glm::vec2& spawn) {
 	if (mMainMenuActive && mUIScenes.mNextTabLoaded) {
 		switch (mUIScenes.mActiveTab) {
 		case MenuTabs::MAIN:
@@ -170,14 +170,14 @@ void SceneManager::UpdateUIMenu(int tilesetOffset, float deltaTime, int& windowW
 				mUIScenes.mActiveTab = MenuTabs::MAIN;
 			}
 			if (mUIScenes.mButtonMap["LEVEL_1"].GetPressState()) {
-				LoadLevel(Levels::LEVEL_1, tilesetOffset, audioHandler->IntroMusic);
+				LoadLevel(Levels::LEVEL_1, tilesetOffset, audioHandler->IntroMusic, restart, reload, spawn);
 			}
 			if (settings->debugMode) {
 				if (mUIScenes.mButtonMap["TEST_LEVEL"].GetPressState()) {
-					LoadLevel(Levels::TEST_LEVEL, tilesetOffset, audioHandler->IntroMusic);
+					LoadLevel(Levels::TEST_LEVEL, tilesetOffset, audioHandler->IntroMusic, restart, reload, spawn);
 				}
 				if (mUIScenes.mButtonMap["TEST_LEVEL_OLD"].GetPressState()) {
-					LoadLevel(Levels::TEST_LEVEL_OLD, tilesetOffset, audioHandler->IntroMusic);
+					LoadLevel(Levels::TEST_LEVEL_OLD, tilesetOffset, audioHandler->IntroMusic, restart, reload, spawn);
 				}
 			}
 
@@ -649,25 +649,31 @@ void SceneManager::LoadMainMenu(const int& tilesetOffset) {
 }
 
 
-void SceneManager::ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introMusic) {
+void SceneManager::ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introMusic, glm::vec2& spawn) {
 	switch (mCurrentLevel) {
 	case Levels::LEVEL_1:
 		mLevelScene.mLevelBlocks.clear();
-		mLevelScene.LoadLevel("levels/GameLevels/32p/Level_1.json", tilesetOffset);
+		//mLevelScene.LoadLevel("levels/GameLevels/32p/Level_1.json", tilesetOffset);
+		mLevelScene.LoadLevelTMX("levels/GameLevels/32p/Level_1.tmx", tilesetOffset, spawn);
+
 		mCurrentBlocks = &mLevelScene.mLevelBlocks;
 		mLevelActive = true;
 		mMainMenuActive = false;
 		break;
 	case Levels::TEST_LEVEL:
 		mLevelScene.mLevelBlocks.clear();
-		mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level_V2.json", tilesetOffset);
+		//mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level_V2.json", tilesetOffset);
+		mLevelScene.LoadLevelTMX("levels/GameLevels/32p/Test_Level_V2.tmx", tilesetOffset, spawn);
+
 		mCurrentBlocks = &mLevelScene.mLevelBlocks;
 		mLevelActive = true;
 		mMainMenuActive = false;
 		break;
 	case Levels::TEST_LEVEL_OLD:
 		mLevelScene.mLevelBlocks.clear();
-		mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level.json", tilesetOffset);
+		//mLevelScene.LoadLevel("levels/GameLevels/32p/Test_Level.json", tilesetOffset);
+		mLevelScene.LoadLevelTMX("levels/GameLevels/32p/Test_Level.tmx", tilesetOffset, spawn);
+
 		mCurrentBlocks = &mLevelScene.mLevelBlocks;
 		mLevelActive = true;
 		mMainMenuActive = false;
@@ -681,7 +687,9 @@ void SceneManager::ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introM
 	Mix_PlayMusic(introMusic, 0);
 }
 
-void SceneManager::LoadLevel(Levels level, const int tilesetOffset, Mix_Music* introMusic) {
+void SceneManager::LoadLevel(Levels level, const int tilesetOffset, Mix_Music* introMusic, bool& restart, bool& reload, glm::vec2& spawn) {
+	restart = true;
+	reload = true;
 	mCurrentLevel = level;
-	ReloadCurrentLevel(tilesetOffset, introMusic);
+	ReloadCurrentLevel(tilesetOffset, introMusic, spawn);
 }

@@ -1,5 +1,11 @@
 #include "LevelScene.hpp"
 #include <fstream>
+#include <tmxlite/Map.hpp>
+#include <tmxlite/Layer.hpp>
+#include <tmxlite/TileLayer.hpp>
+#include <tmxlite/ObjectGroup.hpp>
+#include <iostream>
+
 
 LevelScene::LevelScene() {
 
@@ -10,6 +16,8 @@ LevelScene::~LevelScene() {
 }
 
 void LevelScene::LoadLevel(std::string path, const int& tilesetOffset) {
+
+	// DEPRECATED!
 
 	std::ifstream jsonStream(path);
 
@@ -87,4 +95,104 @@ void LevelScene::LoadLevel(std::string path, const int& tilesetOffset) {
 			}
 		}
 	}
+}
+
+void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::vec2& spawn) {
+	
+	tmx::Object::Shape shape;
+
+	tmx::Map map;
+	
+	static int GDI = 0;
+
+	bool spFound = false;
+
+	if (map.load(path)) {
+		const auto& layers = map.getLayers();
+
+		const auto gridSize = map.getTileSize();
+
+		const auto mapSize = map.getBounds();
+
+		for (const auto& tileset : map.getTilesets()) {
+			if (toLower(tileset.getName()) == "tiles32") {
+				GDI = tileset.getFirstGID();
+			}
+		}
+
+		for (const auto& layer : layers) {
+			if (layer->getType() == tmx::Layer::Type::Object) {
+				const auto& objectLayer = layer->getLayerAs<tmx::ObjectGroup>();
+
+				if (toLower(objectLayer.getName()) == "colliders") {
+					const auto& objects = objectLayer.getObjects();
+					for (const auto& object : objects) {
+						auto aabb = object.getAABB();
+
+						GameObject obj;
+						obj.mIsCollidable = true;
+						obj.mSprite.mVertexData.Position = glm::vec2(((aabb.left) / gridSize.x) * blockSize, ((mapSize.height - (aabb.top + aabb.height)) / gridSize.y) * blockSize);
+						obj.mSprite.mVertexData.Size = glm::vec2((aabb.width / gridSize.x) * blockSize, (aabb.height / gridSize.y) * blockSize);
+						obj.mIsVisible = false;
+
+						obj.mSprite.mVertexData.TextureIndex = 0;
+
+
+						this->mLevelBlocks.push_back(obj);
+					}
+				}
+				else if (toLower(objectLayer.getName()) == "triggers") {
+					const auto& objects = objectLayer.getObjects();
+
+					for (const auto& object : objects) {
+						if (toLower(object.getName()) == "actor spawn" && object.getShape() == tmx::Object::Shape::Point) {
+							const auto pos = object.getPosition();
+
+							spawn = glm::vec2((pos.x / gridSize.x) * blockSize, ((mapSize.height - pos.y) / gridSize.y) * blockSize);
+
+							spFound = true;
+						}
+					}
+
+					
+				}
+
+			}
+			else if (layer->getType() == tmx::Layer::Type::Tile) {
+				const auto& tileLayer = layer->getLayerAs<tmx::TileLayer>();
+
+				if (toLower(tileLayer.getName()) == "baselayer") {
+					const auto& tiles = tileLayer.getTiles();
+
+					int height = layer->getSize().y;
+					int width = layer->getSize().x;
+					
+					for (int i = 0; i < height; ++i) {
+						for (int j = 0; j < width; ++j) {
+							if (tiles[width * i + j].ID != 0) {
+								GameObject obj;
+								obj.mSprite.mVertexData.Position = glm::vec2(j * blockSize, ((height - i) * blockSize) - blockSize);
+								obj.mSprite.mVertexData.Size = glm::vec2(blockSize, blockSize);
+								obj.mIsVisible = true;
+								obj.mSprite.mVertexData.TextureIndex = tilesetOffset + tiles[width * i + j].ID - GDI;
+
+								this->mLevelBlocks.push_back(obj);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (!spFound) {
+			std::cout << "Spawn point not specified on the level, defaulting" << std::endl;
+			spawn = glm::vec2(500.0f);
+		}
+
+		const auto& tilesets = map.getTilesets();
+		for (const auto& tileset : tilesets) {
+			//read out tile set properties, load textures etc...
+		}
+	}
+
 }

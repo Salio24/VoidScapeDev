@@ -38,7 +38,7 @@ public:
 
 	~StateMachine();
 
-	void Update(MovementHandler& movementHandler, AnimationHandler& animationHandler, AudioHandler& audioHandler, Actor& actor, const float& deltaTime);
+	void Update(AnimationHandler& animationHandler, AudioHandler& audioHandler, Actor& actor, const float& deltaTime);
 
 	void Reset();
 
@@ -73,5 +73,5 @@ private:
 
 	PlayerStates lastState = PlayerStates::IDLE;
 
-	void CheckPlayerState(Actor& actor, MovementHandler& movementHandler);
+	void CheckPlayerState(Actor& actor);
 };

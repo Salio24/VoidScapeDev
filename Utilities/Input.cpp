@@ -64,25 +64,15 @@ void InputManager::Input() {
 				mActiveKeys[static_cast<int>(ActiveKeys::SPACE)] = false;
 				app().mActor.mPhysicsComponent.mSpacebarOneShot = true;
 
-				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::SPACE)] = false;
-				app().mMovementHandler.mSpacebarOneShot = true;
-
 			} else if (e.key.scancode == mControls.DUCK_KEY_BIND) {
 				mActiveKeys[static_cast<int>(ActiveKeys::DUCK)] = false;
 				app().mActor.mPhysicsComponent.mDuckOneShot = true;
 
-				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::DUCK)] = false;
-				app().mMovementHandler.mDuckOneShot = true;
-
 			} else if (e.key.scancode == mControls.LEFT_KEY_BIND) {
 				mActiveKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] = false;
 
-				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_LEFT)] = false;
-
 			} else if (e.key.scancode == mControls.RIGHT_KEY_BIND) {
 				mActiveKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)] = false;
-
-				app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_RIGHT)] = false;
 
 			} 
 			else if (e.key.scancode == SDL_SCANCODE_MINUS) {
@@ -102,21 +92,17 @@ void InputManager::Input() {
 		}
 		const bool* state = SDL_GetKeyboardState(nullptr);
 		if (state[mControls.JUMP_KEY_BIND]) {
-			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::SPACE)] = true;
 			mActiveKeys[static_cast<int>(ActiveKeys::SPACE)] = true;
 
 		}
 		if (state[mControls.DUCK_KEY_BIND]) {
-			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::DUCK)] = true;
 			mActiveKeys[static_cast<int>(ActiveKeys::DUCK)] = true;
 
 		}
 		if (state[mControls.LEFT_KEY_BIND]) {
-			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_LEFT)] = true;
 			mActiveKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] = true;
 		}
 		if (state[mControls.RIGHT_KEY_BIND]) {
-			app().mMovementHandler.mKeyboadStates[static_cast<int>(MovementState::MOVE_RIGHT)] = true;
 			mActiveKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)] = true;
 		}
 		if (state[SDL_SCANCODE_UP]) {

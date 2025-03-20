@@ -17,7 +17,7 @@ bool StateMachine::CompareToLastState(const PlayerStates& state) {
 	return state == lastState;
 }
 
-void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandler) {
+void StateMachine::CheckPlayerState(Actor& actor) {
 	lastState = mCurrentPlayerState;
 	if (!actor.mPhysicsComponent.mGrounded) {
 		if (actor.mPhysicsComponent.mJumping) {
@@ -69,8 +69,8 @@ void StateMachine::CheckPlayerState(Actor& actor, MovementHandler& movementHandl
 	//}
 }
 
-void StateMachine::Update(MovementHandler& movementHandler, AnimationHandler& animationHandler, AudioHandler& audioHandler, Actor& actor, const float& deltaTime) {
-	CheckPlayerState(actor, movementHandler);
+void StateMachine::Update(AnimationHandler& animationHandler, AudioHandler& audioHandler, Actor& actor, const float& deltaTime) {
+	CheckPlayerState(actor);
 	switch (actor.mPhysicsComponent.mLookDirection) {
 	case LookDirections::LEFT:
 		mActorFlipped = true;
@@ -142,10 +142,6 @@ void StateMachine::Update(MovementHandler& movementHandler, AnimationHandler& an
 		mCurrentActorTextureSize = animationHandler.FallAnimation.Size;
 		mCurrentActorTexturePosition = animationHandler.FallAnimation.TexturePosition;
 		mCurrentActorTextureIndex = animationHandler.FallAnimation.AnimationTextureIndexes[0];
-
-		movementHandler.FinishDoubleJump();
-
-		movementHandler.FinishJump();
 
 		if (!Mix_Playing(4)) {
 			Mix_PlayChannel(4, audioHandler.WindSoft, 0);

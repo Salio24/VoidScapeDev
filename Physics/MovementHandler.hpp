@@ -4,6 +4,7 @@
 #include "../Actors/Actor.hpp"
 #include "../Utilities/HelperStructs.hpp"
 
+/*
 enum class MovementState {
 	MOVE_LEFT,
 	MOVE_RIGHT,
@@ -82,5 +83,5 @@ private:
 
 	int slideDirection{ 0 };
 };
-
+*/
 

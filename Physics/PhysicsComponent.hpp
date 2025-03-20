@@ -9,7 +9,7 @@
 #include "../Actors/GameObject.hpp"
 #include "VSMath.hpp"
 
-
+/*
 struct PhysicsSettings {
 	float GravityUP{ -900.0f };
 	float GravityDOWN{ -1200.0f };
@@ -59,6 +59,7 @@ struct PhysicsSettings {
 
 	float SlidingCollidorFactor{ 0.75f };
 };
+*/
 
 class PhysicsComponent {
 public:
@@ -108,7 +109,7 @@ public:
 
 	bool mCrouching{ false };
 
-	PhysicsSettings mPhysicsSettings;
+	Config mPhysicsSettings;
 
 	bool mSpacebarOneShot{ true };
 

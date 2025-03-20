@@ -45,7 +45,7 @@ public:
 
 	void PostStartUp();
 
-	void LoadGame(const bool retry = false);
+	void LoadGame(const bool retry = false, bool reload = false, glm::vec2 spawnpoint = glm::vec2(770.0f, 350.0f));
 
 	void MainLoop();
 
@@ -58,8 +58,6 @@ public:
 	BatchRenderer mBatchRenderer;
 
 	Actor mActor;
-
-	MovementHandler mMovementHandler;
 
 	AudioHandler mAudioHandler;
 
@@ -152,4 +150,6 @@ private:
 
 	SDL_Window* mWindow     { nullptr };
 	SDL_GLContext mGlContext{ nullptr };
+
+	glm::vec2 actorSpawn{ 0.0f, 0.0f };
 };

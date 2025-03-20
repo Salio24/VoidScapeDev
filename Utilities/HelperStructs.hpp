@@ -159,126 +159,119 @@ struct Controls {
 };
 
 struct Config {
-	// gravity
-	float ConstantWallSlideSpeed{ -125.0f }; // const gravity when wall sliding
+	float GravityUP{ -900.0f };
+	float GravityDOWN{ -1200.0f };
+	float FallSpeedLimit{ -1500.0f };
 
-	float GravityAccelerationWhenGoingUp{ -1440.0f };
+	float RunAccelerationOnFoot{ 1000.0f };
+	float RunAccelerationMidAir{ 400.0f };
+	float RunSpeedLimit{ 800.0f };
 
-	float GravityAccelerationWhenGoingDown{ -1920.0f };
+	float CrouchAcceleration{ 1000.0f };
+	float CrouchSpeedLimit{ 200.0f };
 
-	// run
-	float RunAccelerationOnFoot{ 4000.0f };
+	float DefaultFrictionStopSpeed{ 20.0f };
+	float DefaultFriction{ 2000.0f };
+	// values > ~3800.0f are unstable 
 
-	float RunAccelerationMidAir{ 1440.0f };
+	float AirResistanceStopSpeed{ 10.0f };
+	float DefaultAirResistance{ 300.0f };
+	// values > ~3800.0f are unstable 
 
-	float RunSpeedLimitOnFoot{ 500.0f }; // this needs to be tuned in conjunction with friction modifiers, with 7.2f default friction the actor won't go faster than is 550.0f on foot 
+	float SlidingFrictionStopSpeed{ 20.0f };
+	float SlidingFriction{ 1000.0f };
+	// values > ~3800.0f are unstable 
 
-	float RunSpeedLimitMidAir{ 500.0f };
+	float SlidingImpulse{ 50000.0f };
+	float ThresholdSpeedToSlide{ 300.0f };
 
-	// slam
-	float SlamAcceleartion{ 5000.0f };
+	float JumpStartImpulse{ 50000.0f };
+	float JumpContinuousAcceleration{ 2000.0f };
 
-	float SlamSpeedLimit{ 2000.0f };
+	float DoubleJumpStartImpulse{ 50000.0f };
+	float DoubleJumpContinuousAcceleration{ 2000.0f };
 
-	// friction
-	float DefaultFriction{ 7.2f };
+	float WallJumpStartImpulse{ 50000.0f };
+	float WallJumpStartSideImpulse{ 25000.0f };
+	float WallJumpContinuousAcceleration{ 2000.0f };
 
-	float MinimalSpeedWithFriction{ 0.1f };
+	int VariableJumpTicks{ 32 };
+	int VariableDoubleJumpTicks{ 32 };
+	int VariableWallJumpTicks{ 32 };
 
-	// slide
-	float SlideSpeedBoost{ 200.0f };
+	int JumpBufferTicks{ 25 };
 
-	float MinSpeedToStartSlide{ 200.0f };
+	int CoyoteTimeTicks{ 12 };
 
-	float SlidingFriction{ 0.25f };
+	float WallSlideSpeed{ 125.0f };
 
-	// jumps
-	float InitialSpeedBoostOnDoubleJump{ 320.0f };
-
-	float InitialSpeedBoostOnWallJumpX{ 320.0f };
-
-	float InitialSpeedBoostOnWallJumpY{ 300.0f };
-
-	float InitialSpeedBoostOnJump{ 320.0f };
-
-	float VariableJumpAcceleration{ 3000.0f };
-
-	float VariableDoubleJumpAcceleration{ 3000.0f };
-
-	float VariableWallJumpAcceleration{ 2000.0f };
-
-	int JumpBufferTime{ 100 };
-
-	int VariableJumpTime{ 200 };
-
-	int VariableDoubleJumpTime{ 150 };
-
-	int VariableWallJumpTime{ 200 };
-
-	// limits
-	float SpeedLiminOnX{ 800.0f };
-
-	float SpeedLiminOnY{ -1200.0f }; // only limits fall speed
+	float SlidingCollidorFactor{ 0.75f };
 
 	friend void to_json(json& j, const Config& c) {
 		j = json{
-			{"ConstantWallSlideSpeed", c.ConstantWallSlideSpeed},
-			{"GravityAccelerationWhenGoingUp", c.GravityAccelerationWhenGoingUp},
-			{"GravityAccelerationWhenGoingDown", c.GravityAccelerationWhenGoingDown},
+			{"GravityUP", c.GravityUP},
+			{"GravityDOWN", c.GravityDOWN},
+			{"FallSpeedLimit", c.FallSpeedLimit},
 			{"RunAccelerationOnFoot", c.RunAccelerationOnFoot},
 			{"RunAccelerationMidAir", c.RunAccelerationMidAir},
-			{"RunSpeedLimitOnFoot", c.RunSpeedLimitOnFoot},
-			{"RunSpeedLimitMidAir", c.RunSpeedLimitMidAir},
-			{"SlamAcceleartion", c.SlamAcceleartion},
-			{"SlamSpeedLimit", c.SlamSpeedLimit},
+			{"RunSpeedLimit", c.RunSpeedLimit},
+			{"CrouchAcceleration", c.CrouchAcceleration},
+			{"CrouchSpeedLimit", c.CrouchSpeedLimit},
+			{"DefaultFrictionStopSpeed", c.DefaultFrictionStopSpeed},
 			{"DefaultFriction", c.DefaultFriction},
-			{"MinimalSpeedWithFriction", c.MinimalSpeedWithFriction},
-			{"SlideSpeedBoost", c.SlideSpeedBoost},
-			{"MinSpeedToStartSlide", c.MinSpeedToStartSlide},
+			{"AirResistanceStopSpeed", c.AirResistanceStopSpeed},
+			{"DefaultAirResistance", c.DefaultAirResistance},
+			{"SlidingFrictionStopSpeed", c.SlidingFrictionStopSpeed},
 			{"SlidingFriction", c.SlidingFriction},
-			{"InitialSpeedBoostOnDoubleJump", c.InitialSpeedBoostOnDoubleJump},
-			{"InitialSpeedBoostOnWallJumpX", c.InitialSpeedBoostOnWallJumpX},
-			{"InitialSpeedBoostOnWallJumpY", c.InitialSpeedBoostOnWallJumpY},
-			{"InitialSpeedBoostOnJump", c.InitialSpeedBoostOnJump},
-			{"VariableJumpAcceleration", c.VariableJumpAcceleration},
-			{"VariableDoubleJumpAcceleration", c.VariableDoubleJumpAcceleration},
-			{"VariableWallJumpAcceleration", c.VariableWallJumpAcceleration},
-			{"JumpBufferTime", c.JumpBufferTime},
-			{"VariableJumpTime", c.VariableJumpTime},
-			{"VariableDoubleJumpTime", c.VariableDoubleJumpTime},
-			{"VariableWallJumpTime", c.VariableWallJumpTime},
-			{"SpeedLiminOnX", c.SpeedLiminOnX},
-			{"SpeedLiminOnY", c.SpeedLiminOnY},
+			{"SlidingImpulse", c.SlidingImpulse},
+			{"ThresholdSpeedToSlide", c.ThresholdSpeedToSlide},
+			{"JumpStartImpulse", c.JumpStartImpulse},
+			{"JumpContinuousAcceleration", c.JumpContinuousAcceleration},
+			{"DoubleJumpStartImpulse", c.DoubleJumpStartImpulse},
+			{"DoubleJumpContinuousAcceleration", c.DoubleJumpContinuousAcceleration},
+			{"WallJumpStartImpulse", c.WallJumpStartImpulse},
+			{"WallJumpStartSideImpulse", c.WallJumpStartSideImpulse},
+			{"WallJumpContinuousAcceleration", c.WallJumpContinuousAcceleration},
+			{"VariableJumpTicks", c.VariableJumpTicks},
+			{"VariableDoubleJumpTicks", c.VariableDoubleJumpTicks},
+			{"VariableWallJumpTicks", c.VariableWallJumpTicks},
+			{"JumpBufferTicks", c.JumpBufferTicks},
+			{"CoyoteTimeTicks", c.CoyoteTimeTicks},
+			{"WallSlideSpeed", c.WallSlideSpeed},
+			{"SlidingCollidorFactor", c.SlidingCollidorFactor},
 		};
 	}
 
 	friend void from_json(const json& j, Config& c) {
-		j.at("ConstantWallSlideSpeed").get_to(c.ConstantWallSlideSpeed);
-		j.at("GravityAccelerationWhenGoingUp").get_to(c.GravityAccelerationWhenGoingUp);
-		j.at("GravityAccelerationWhenGoingDown").get_to(c.GravityAccelerationWhenGoingDown);
+		j.at("GravityUP").get_to(c.GravityUP);
+		j.at("GravityDOWN").get_to(c.GravityDOWN);
+		j.at("FallSpeedLimit").get_to(c.FallSpeedLimit);
 		j.at("RunAccelerationOnFoot").get_to(c.RunAccelerationOnFoot);
 		j.at("RunAccelerationMidAir").get_to(c.RunAccelerationMidAir);
-		j.at("RunSpeedLimitOnFoot").get_to(c.RunSpeedLimitOnFoot);
-		j.at("RunSpeedLimitMidAir").get_to(c.RunSpeedLimitMidAir);
-		j.at("SlamAcceleartion").get_to(c.SlamAcceleartion);
-		j.at("SlamSpeedLimit").get_to(c.SlamSpeedLimit);
+		j.at("RunSpeedLimit").get_to(c.RunSpeedLimit);
+		j.at("CrouchAcceleration").get_to(c.CrouchAcceleration);
+		j.at("CrouchSpeedLimit").get_to(c.CrouchSpeedLimit);
+		j.at("DefaultFrictionStopSpeed").get_to(c.DefaultFrictionStopSpeed);
 		j.at("DefaultFriction").get_to(c.DefaultFriction);
-		j.at("MinimalSpeedWithFriction").get_to(c.MinimalSpeedWithFriction);
-		j.at("SlideSpeedBoost").get_to(c.SlideSpeedBoost);
-		j.at("MinSpeedToStartSlide").get_to(c.MinSpeedToStartSlide);
+		j.at("AirResistanceStopSpeed").get_to(c.AirResistanceStopSpeed);
+		j.at("DefaultAirResistance").get_to(c.DefaultAirResistance);
+		j.at("SlidingFrictionStopSpeed").get_to(c.SlidingFrictionStopSpeed);
 		j.at("SlidingFriction").get_to(c.SlidingFriction);
-		j.at("InitialSpeedBoostOnDoubleJump").get_to(c.InitialSpeedBoostOnDoubleJump);
-		j.at("InitialSpeedBoostOnWallJumpX").get_to(c.InitialSpeedBoostOnWallJumpX);
-		j.at("InitialSpeedBoostOnWallJumpY").get_to(c.InitialSpeedBoostOnWallJumpY);
-		j.at("InitialSpeedBoostOnJump").get_to(c.InitialSpeedBoostOnJump);
-		j.at("VariableJumpAcceleration").get_to(c.VariableJumpAcceleration);
-		j.at("VariableDoubleJumpAcceleration").get_to(c.VariableDoubleJumpAcceleration);
-		j.at("VariableWallJumpAcceleration").get_to(c.VariableWallJumpAcceleration);
-		j.at("JumpBufferTime").get_to(c.JumpBufferTime);
-		j.at("VariableJumpTime").get_to(c.VariableJumpTime);
-		j.at("VariableDoubleJumpTime").get_to(c.VariableDoubleJumpTime);
-		j.at("VariableWallJumpTime").get_to(c.VariableWallJumpTime);
-		j.at("SpeedLiminOnX").get_to(c.SpeedLiminOnX);
-		j.at("SpeedLiminOnY").get_to(c.SpeedLiminOnY);
+		j.at("SlidingImpulse").get_to(c.SlidingImpulse);
+		j.at("ThresholdSpeedToSlide").get_to(c.ThresholdSpeedToSlide);
+		j.at("JumpStartImpulse").get_to(c.JumpStartImpulse);
+		j.at("JumpContinuousAcceleration").get_to(c.JumpContinuousAcceleration);
+		j.at("DoubleJumpStartImpulse").get_to(c.DoubleJumpStartImpulse);
+		j.at("DoubleJumpContinuousAcceleration").get_to(c.DoubleJumpContinuousAcceleration);
+		j.at("WallJumpStartImpulse").get_to(c.WallJumpStartImpulse);
+		j.at("WallJumpStartSideImpulse").get_to(c.WallJumpStartSideImpulse);
+		j.at("WallJumpContinuousAcceleration").get_to(c.WallJumpContinuousAcceleration);
+		j.at("VariableJumpTicks").get_to(c.VariableJumpTicks);
+		j.at("VariableDoubleJumpTicks").get_to(c.VariableDoubleJumpTicks);
+		j.at("VariableWallJumpTicks").get_to(c.VariableWallJumpTicks);
+		j.at("JumpBufferTicks").get_to(c.JumpBufferTicks);
+		j.at("CoyoteTimeTicks").get_to(c.CoyoteTimeTicks);
+		j.at("WallSlideSpeed").get_to(c.WallSlideSpeed);
+		j.at("SlidingCollidorFactor").get_to(c.SlidingCollidorFactor);
 	}
 };

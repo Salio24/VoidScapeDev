@@ -54,6 +54,7 @@ void App::StartUp() {
 	mSaveData = JsonManager::loadSaveData();
 	mInputManager.mControls = JsonManager::loadControls();
 	mConfig = JsonManager::loadConfig();
+	mActor.mPhysicsComponent.mPhysicsSettings = mConfig;
 
 	mSettings.screenSize.x = bounds.w;
 	mSettings.screenSize.y = bounds.h;
@@ -178,27 +179,44 @@ void App::PostStartUp() {
 	mTextureHandler.InitTextureArray(GL_RGBA8, 128, 600);
 	mTextureHandler.InitTextureArray(GL_RGBA8, 512, 32);
 
+	{
+		uint32_t whiteTextureData[16 * 16];
+		for (int i = 0; i < 16 * 16; i++) {
+			whiteTextureData[i] = 0xFFFFFFFF; // RGBA: White
+		}
 
-	uint32_t whiteTextureData[16 * 16];
-	for (int i = 0; i < 16 * 16; i++) {
-		whiteTextureData[i] = 0xFFFFFFFF; // RGBA: White
+		glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[16].first);
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
+		mTextureHandler.mTextureArrays[16].second++;
+	} {
+		uint32_t whiteTextureData[32 * 32];
+		for (int i = 0; i < 32 * 32; i++) {
+			whiteTextureData[i] = 0xFFFFFFFF; // RGBA: White
+		}
+
+		glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[32].first);
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 32, 32, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
+		mTextureHandler.mTextureArrays[32].second++;
+	} {
+		uint32_t whiteTextureData[128 * 128];
+		for (int i = 0; i < 128 * 128; i++) {
+			whiteTextureData[i] = 0xFFFFFFFF; // RGBA: White
+		}
+
+		glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[128].first);
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 128, 128, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
+		mTextureHandler.mTextureArrays[128].second++;
+	} {
+		uint32_t whiteTextureData[128 * 128];
+		for (int i = 0; i < 128 * 128; i++) {
+			whiteTextureData[i] = 0xFFFFFFFF; // RGBA: White
+		}
+
+		glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[512].first);
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 128, 128, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
+		mTextureHandler.mTextureArrays[512].second++;
 	}
 
-	glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[16].first);
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
-	mTextureHandler.mTextureArrays[16].second++;
-
-	glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[32].first);
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
-	mTextureHandler.mTextureArrays[32].second++;
-
-	glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[128].first);
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
-	mTextureHandler.mTextureArrays[128].second++;
-
-	glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[512].first);
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteTextureData);
-	mTextureHandler.mTextureArrays[512].second++;
 
 	mAnimationHandler.Init();
 
@@ -237,13 +255,17 @@ void App::PostStartUp() {
 	mSceneManager.Init(&mInputManager, &mBackgroundRenderer, &mAudioHandler, &mSettings, &mSaveData, &mBatchRenderer, &mTextRenderer);
 }
 
-void App::LoadGame(const bool retry) {
+void App::LoadGame(const bool retry, bool reload, glm::vec2 spawnpoint) {
+
+	if (reload) {
+		actorSpawn = spawnpoint;
+	}
+
 	mBlackHole.Reset();
 	mStateMachine.Reset();
-	mActor.Reset(mAnimationHandler.FallAnimation.Size, glm::vec2(770.0f, 350.0f));
+	mActor.Reset(mAnimationHandler.FallAnimation.Size, actorSpawn);
 	mSceneManager.mUIScenes.mTitleScreenActive = false;
 	// reset movement handler
-	mMovementHandler.mLookDirection = LookDirections::RIGHT;
 	mSceneManager.mNewBestTimeMessageOneShot = false;
 
 	// reset camera
@@ -277,6 +299,7 @@ void App::LoadGame(const bool retry) {
 	Mix_HaltChannel(17);
 	Mix_HaltChannel(18);
 	Mix_HaltChannel(19);
+	glm::vec2 aaaa = glm::vec2(0.0f);
 
 	if (!retry) {
 		if (mSceneManager.mUIScenes.mActiveTab == MenuTabs::LEVELS) {
@@ -289,8 +312,8 @@ void App::LoadGame(const bool retry) {
 		mSceneManager.mUIScenes.LoadMainMenuControlsTab(mTextureHandler.mTilesetLocations.mUIBorderTileset.second);
 		mSceneManager.LoadMainMenu(mTextureHandler.mTilesetLocations.mUIBorderTileset.second);
 	}
-	else if (retry) {
-		mSceneManager.ReloadCurrentLevel(mTextureHandler.mTilesetLocations.mBaseTileset.second, mAudioHandler.IntroMusic);
+	else if (retry && !reload) {
+		mSceneManager.ReloadCurrentLevel(mTextureHandler.mTilesetLocations.mBaseTileset.second, mAudioHandler.IntroMusic, aaaa);
 	}
 
 	mSceneManager.mUIScenes.LoadPauseMenu(mTextureHandler.mTilesetLocations.mUIBorderTileset.second);
@@ -320,6 +343,7 @@ void App::MainLoop() {
 
 void App::ReloadConfig() {
 	mConfig = JsonManager::loadConfig();
+	mActor.mPhysicsComponent.mPhysicsSettings = mConfig;
 }
 
 void App::UpdatePlayground(float deltaTime) {
@@ -473,9 +497,9 @@ void App::Update() {
 	if (!mPause) {
 		//mMovementHandler.Update(deltaTime, mActor, mSceneManager.mLevelActive, mConfig);
 		//mActor.Update(deltaTime, mSceneManager.mCurrentBlocks, mInputManager.mActiveKeys);
-		if (!mMovementHandler.mLast_mCanDoubleJump && mMovementHandler.mCanDoubleJump && !mActor.mDead) {
-			Mix_PlayChannel(19, mAudioHandler.DoubleJumpRecharge, 0);
-		}
+		//if (!mMovementHandler.mLast_mCanDoubleJump && mMovementHandler.mCanDoubleJump && !mActor.mDead) {
+		//	Mix_PlayChannel(19, mAudioHandler.DoubleJumpRecharge, 0);
+		//}
 	}
 
 	// black hole update
@@ -527,6 +551,12 @@ void App::Update() {
 	mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix());
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[512].first);
+
+	bool restart = false;
+	bool restartMode = false;
+	bool reload = false;
+
+	glm::vec2 spawn = glm::vec2(0.0f);
 
 	if (mSceneManager.mLevelActive == true) {
 		if (gameStarted) {
@@ -606,7 +636,7 @@ void App::Update() {
 			}
 		}
 
-		mSceneManager.UpdateUIMenu(mTextureHandler.mTilesetLocations.mBaseTileset.second, deltaTimeOld, mWindowWidth, mWindowHeight, mQuit, mWindowModes, mResolutions, mWindow);
+		mSceneManager.UpdateUIMenu(mTextureHandler.mTilesetLocations.mBaseTileset.second, deltaTimeOld, mWindowWidth, mWindowHeight, mQuit, mWindowModes, mResolutions, mWindow, restart, reload, spawn);
 
 		mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix(), &mCamera.mUIModelMatrix);
 		glActiveTexture(GL_TEXTURE0);
@@ -622,7 +652,7 @@ void App::Update() {
 
 	// state machine update
 	if (mSceneManager.mLevelActive && !mPause) {
-		mStateMachine.Update(mMovementHandler, mAnimationHandler, mAudioHandler, mActor, deltaTimeOld);
+		mStateMachine.Update(mAnimationHandler, mAudioHandler, mActor, deltaTimeOld);
 	}
 
 
@@ -646,7 +676,6 @@ void App::Update() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, mTextureHandler.mTextureArrays[128].first);
 
-
 		// debug
 
 		if (mActor.mPhysicsComponent.mSliding || mActor.mPhysicsComponent.mCrouching) {
@@ -663,8 +692,6 @@ void App::Update() {
 			mBatchRenderer.DrawSeperatly(glm::vec2(220.0f, 900.0f), glm::vec2(20.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), mCamera.GetProjectionMatrix(), &mCamera.mUIModelMatrix);
 		}
 
-
-
 		mBatchRenderer.DrawSeperatly(mCamera.GetProjectionMatrix(), mActor.mSprite.mVertexData.Position, mStateMachine.mCurrentActorDrawSize,
 			mStateMachine.mCurrentActorTextureIndex, mStateMachine.mCurrentActorTextureSize, mStateMachine.mCurrentActorTexturePosition, angle, 1.0f, mStateMachine.mActorFlipped, &mActor.mModelMatrix);
 		if (!mActor.mDead) {
@@ -677,14 +704,14 @@ void App::Update() {
 		}
 	}
 
-	bool restart = false;
-	bool restartMode = false;
-
 	mSceneManager.UpdateUIInGame(restart, restartMode, mActor.mDead, mActor.mEscaped, mPause, gameStarted, mCamera.GetProjectionMatrix(), mCamera.mUIModelMatrix, deltaTimeOld, mStateMachine.mActorDeathCause, &mTextShaderProgram, mPipelineProgram.ID, fps, mTextureHandler.mTextureArrays[mTextureHandler.mTilesetLocations.mUIBorderTileset.first].first);
 
 	if (restart) {
 		if (restartMode) {
 			LoadGame();
+		}
+		else if (reload) {
+			LoadGame(true, true, spawn);
 		}
 		else {
 			LoadGame(true);

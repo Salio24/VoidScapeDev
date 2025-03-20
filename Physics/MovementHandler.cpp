@@ -1,6 +1,7 @@
 #include "MovementHandler.hpp"
 #include "../Utilities/sign.hpp"
 
+/*
 MovementHandler::MovementHandler() {
 }
 
@@ -250,3 +251,4 @@ void MovementHandler::Update(float& deltaTime, Actor& actor, const bool& started
 		// Friction and limits ^^^
 	}
 } 
+*/
