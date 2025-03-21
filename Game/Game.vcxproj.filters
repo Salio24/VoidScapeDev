@@ -1,0 +1,275 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Externals">
+      <UniqueIdentifier>{ff98ddbf-1aa1-46b7-888d-f6386ea91253}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{16af55b1-7c69-4c6b-bc25-b549cbf2539d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders\Vertex">
+      <UniqueIdentifier>{f30de3ca-0f40-48f7-9fb3-e9a78d06bcc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Shaders\Fragment">
+      <UniqueIdentifier>{3c85e29b-5e64-4fdb-9f3c-eb00094ac9f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\InternalLogic">
+      <UniqueIdentifier>{f75de318-2e8e-436c-897a-25bed30ef237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Actors">
+      <UniqueIdentifier>{21654304-a6da-4f49-9974-8874de6bec45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics">
+      <UniqueIdentifier>{a6fcc0c0-c859-4241-a3b3-72097fa66d59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\InternalLogic\Scenes">
+      <UniqueIdentifier>{ac5d4b26-0214-49f6-b2d4-083ff37e2b2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics\Renderers">
+      <UniqueIdentifier>{9781cd6e-8b4a-4540-af1f-af9449bccc95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics\Shaders">
+      <UniqueIdentifier>{5d686340-390d-4263-944d-af72b72eb838}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Physics">
+      <UniqueIdentifier>{810fa91b-e827-49b6-96b7-5e02c3b695ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utilities">
+      <UniqueIdentifier>{a88b1316-d5d4-46d4-9d85-7c555861b8db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\InternalLogic">
+      <UniqueIdentifier>{a458f14b-c8be-45e2-8828-c4bd0ed5bdae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\InternalLogic\Scenes">
+      <UniqueIdentifier>{3aaf1d09-5f88-41f4-ba03-5667b1e5dc45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Actors">
+      <UniqueIdentifier>{26d5403f-95d7-485d-a32c-595dca4ead33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{05bb5c55-08fc-4abe-bb79-3fe1be60fa24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics\Renderers">
+      <UniqueIdentifier>{bca1267c-54bb-4d03-ad9c-5c4fcb79cdf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics\Shaders">
+      <UniqueIdentifier>{d8674f44-c413-41a9-b604-86ec59c06945}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utilities">
+      <UniqueIdentifier>{e7e5faed-6c55-4282-8eaf-c6cc3ef7072e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Physics">
+      <UniqueIdentifier>{94d24cb7-c8ae-4b9f-884c-ed524910a7db}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Actors\BlackHole.cpp">
+      <Filter>Source Files\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Actors\EscapePortal.cpp">
+      <Filter>Source Files\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Actors\GameEntity.cpp">
+      <Filter>Source Files\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Actors\GameObject.cpp">
+      <Filter>Source Files\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Actors\Actor.cpp">
+      <Filter>Source Files\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Camera.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\PipelineProgram.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Sprite.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Texture.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\AnimationHandler.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Shaders\ShaderProgram.cpp">
+      <Filter>Source Files\Graphics\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Renderers\BackgroundRenderer.cpp">
+      <Filter>Source Files\Graphics\Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Renderers\BatchRenderer.cpp">
+      <Filter>Source Files\Graphics\Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Renderers\TextRenderer.cpp">
+      <Filter>Source Files\Graphics\Renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\MovementHandler.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\PhysicsComponent.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\CollisionHandler.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Input.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\JsonFileManager.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\AudioHandler.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalLogic\StateMachine.cpp">
+      <Filter>Source Files\InternalLogic</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalLogic\Scenes\SceneManager.cpp">
+      <Filter>Source Files\InternalLogic\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalLogic\Scenes\UIScenes.cpp">
+      <Filter>Source Files\InternalLogic\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalLogic\Scenes\LevelScene.cpp">
+      <Filter>Source Files\InternalLogic\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="App.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\VSMath.cpp">
+      <Filter>Source Files\Physics</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actors\EscapePortal.hpp">
+      <Filter>Header Files\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Actors\GameEntity.hpp">
+      <Filter>Header Files\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Actors\GameObject.hpp">
+      <Filter>Header Files\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Actors\Actor.hpp">
+      <Filter>Header Files\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Actors\BlackHole.hpp">
+      <Filter>Header Files\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Camera.hpp">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\PipelineProgram.hpp">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Sprite.hpp">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Texture.hpp">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\AnimationHandler.hpp">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Shaders\ShaderProgram.hpp">
+      <Filter>Header Files\Graphics\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Renderers\BatchRenderer.hpp">
+      <Filter>Header Files\Graphics\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Renderers\TextRenderer.hpp">
+      <Filter>Header Files\Graphics\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Renderers\BackgroundRenderer.hpp">
+      <Filter>Header Files\Graphics\Renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\MovementHandler.hpp">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\PhysicsComponent.hpp">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\CollisionHandler.hpp">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\JsonFileManager.hpp">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\Sign.hpp">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\AudioHandler.hpp">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\HelperStructs.hpp">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\Input.hpp">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalLogic\StateMachine.hpp">
+      <Filter>Header Files\InternalLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalLogic\Scenes\SceneManager.hpp">
+      <Filter>Header Files\InternalLogic\Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalLogic\Scenes\UIScenes.hpp">
+      <Filter>Header Files\InternalLogic\Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalLogic\Scenes\LevelScene.hpp">
+      <Filter>Header Files\InternalLogic\Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="App.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\VSMath.hpp">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Graphics\Shaders\fragment\fragmentBackgroundFramebuffer.glsl">
+      <Filter>Resource Files\Shaders\Fragment</Filter>
+    </None>
+    <None Include="Graphics\Shaders\fragment\fragmentGeneral.glsl">
+      <Filter>Resource Files\Shaders\Fragment</Filter>
+    </None>
+    <None Include="Graphics\Shaders\fragment\fragmentText.glsl">
+      <Filter>Resource Files\Shaders\Fragment</Filter>
+    </None>
+    <None Include="Graphics\Shaders\fragment\fragmentBackground.glsl">
+      <Filter>Resource Files\Shaders\Fragment</Filter>
+    </None>
+    <None Include="Graphics\Shaders\vertex\vertexBackgroundFramebuffer.glsl">
+      <Filter>Resource Files\Shaders\Vertex</Filter>
+    </None>
+    <None Include="Graphics\Shaders\vertex\vertexGeneral.glsl">
+      <Filter>Resource Files\Shaders\Vertex</Filter>
+    </None>
+    <None Include="Graphics\Shaders\vertex\vertexText.glsl">
+      <Filter>Resource Files\Shaders\Vertex</Filter>
+    </None>
+    <None Include="Graphics\Shaders\vertex\vertexBackground.glsl">
+      <Filter>Resource Files\Shaders\Vertex</Filter>
+    </None>
+    <None Include="dev tools &amp; utils\jump_variables_converter.py">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
