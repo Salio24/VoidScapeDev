@@ -1,6 +1,6 @@
-# Voidscape (Work in Progress)
+# Cori Engine (Work in Progress)
 
-This is a work in progress on a platformer game.
+Separate engine development branch, as well as major code rewrite.
 
 ## Development Setup
 
