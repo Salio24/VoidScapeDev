@@ -679,7 +679,7 @@ void App::Update() {
 		// debug
 
 		if (mActor.mPhysicsComponent.mSliding || mActor.mPhysicsComponent.mCrouching) {
-			mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, glm::vec2(mActor.mSprite.mVertexData.Size.x, mActor.mSprite.mVertexData.Size.x * mActor.mPhysicsComponent.mPhysicsSettings.SlidingCollidorFactor), glm::vec4(1.0f), mCamera.GetProjectionMatrix(), &mActor.mModelMatrix);
+			mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, glm::vec2(mActor.mSprite.mVertexData.Size.x, mActor.mSprite.mVertexData.Size.y * mActor.mPhysicsComponent.mPhysicsSettings.SlidingCollidorFactor), glm::vec4(1.0f), mCamera.GetProjectionMatrix(), &mActor.mModelMatrix);
 		}
 		else {
 			mBatchRenderer.DrawSeperatly(mActor.mSprite.mVertexData.Position, mActor.mSprite.mVertexData.Size, glm::vec4(1.0f), mCamera.GetProjectionMatrix(), &mActor.mModelMatrix);

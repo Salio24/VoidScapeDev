@@ -404,7 +404,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		}
 	}
 
-	if ((mGrounded || mCoyoteTimeActive) && jumpBufferTimer < mPhysicsSettings.JumpBufferTicks) {
+	if ((mGrounded || mCoyoteTimeActive) && jumpBufferTimer < mPhysicsSettings.JumpBufferTicks && mCanStand) {
 		if (mCoyoteTimeActive) {
 			coyoteTimeTimer += 1000;
 			acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
