@@ -111,7 +111,7 @@ namespace VSMath {
 			}
 			return true;
 		}
-		void ResolvePenetrationOnX(glm::vec2& dynamicPos, glm::vec2& dynamicVel, glm::vec2 dynamicSize, glm::vec2 staticPos, glm::vec2 staticSize, glm::vec2& normal) {
+		bool ResolvePenetrationOnX(glm::vec2& dynamicPos, glm::vec2& dynamicVel, glm::vec2 dynamicSize, glm::vec2 staticPos, glm::vec2 staticSize, glm::vec2& normal) {
 			glm::vec2 minA = dynamicPos;
 			glm::vec2 maxA = minA + dynamicSize;
 			// AABB bounds: static block
@@ -136,11 +136,13 @@ namespace VSMath {
 						normal.x = 1.0f;
 						if (dynamicVel.x < 0) dynamicVel.x = 0;
 					}
+					return true;
 				}
 			}
+			return false;
 		}
 
-		void ResolvePenetrationOnY(glm::vec2& dynamicPos, glm::vec2& dynamicVel, glm::vec2 dynamicSize, glm::vec2 staticPos, glm::vec2 staticSize, glm::vec2& normal) {
+		bool ResolvePenetrationOnY(glm::vec2& dynamicPos, glm::vec2& dynamicVel, glm::vec2 dynamicSize, glm::vec2 staticPos, glm::vec2 staticSize, glm::vec2& normal) {
 			glm::vec2 minA = dynamicPos;
 			glm::vec2 maxA = minA + dynamicSize;
 			// AABB bounds: static block
@@ -165,8 +167,10 @@ namespace VSMath {
 						normal.y = 1.0f;
 						if (dynamicVel.y < 0) dynamicVel.y = 0;
 					}
+					return true;
 				}
 			}
+			return false;
 		}
 	}
 }

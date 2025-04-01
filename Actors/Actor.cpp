@@ -13,7 +13,17 @@ void Actor::Transform() {
 }
 
 void Actor::FixedTickrateUpdate(double timeStep, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
-	mPhysicsComponent.FixedTickrateUpdate(timeStep, blocks, activeKeys, mSprite.mVertexData.Size);
+	if (!mDead) {
+		mPhysicsComponent.FixedTickrateUpdate(timeStep, blocks, activeKeys, mSprite.mVertexData.Size);
+	}
+	else {
+		bool noMove[static_cast<int>(ActiveKeys::DUCK) + 1] = { false };
+		mPhysicsComponent.FixedTickrateUpdate(timeStep, blocks, noMove, mSprite.mVertexData.Size);
+	}
+	bool de = mPhysicsComponent.GetDeath();
+	if (de) {
+		mDead = true;
+	}
 }
 
 void Actor::Update(double accumulator, double timeStep) {

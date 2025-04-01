@@ -8,6 +8,10 @@ PhysicsComponent::~PhysicsComponent() {
 
 }
 
+bool PhysicsComponent::GetDeath() {
+	return death1;
+}
+
 void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<GameObject>* blocks, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], glm::vec2 colliderSize) {
 
 	previous = current;
@@ -41,6 +45,8 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 
 	glm::vec2 baseCollderSize = colliderSize;
 
+	bool death = false;
+
 	if (mSliding || mCrouching) {
 		colliderSize.y = colliderSize.y * mPhysicsSettings.SlidingCollidorFactor;
 	}
@@ -58,27 +64,35 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 	std::vector<int> bpb;
 	
 	for (int i = 0; i < blocks->size(); i++) {
-		if (!blocks->at(i).mIsDeathTrigger && blocks->at(i).mIsCollidable && blocks->at(i).mSprite.mVertexData.Position.x > A.x && blocks->at(i).mSprite.mVertexData.Position.x < B.x && blocks->at(i).mSprite.mVertexData.Position.y > A.y && blocks->at(i).mSprite.mVertexData.Position.y < B.y) {
-		}
-		if (blocks->at(i).mIsCollidable) {
+		if (blocks->at(i).mIsCollidable || blocks->at(i).mIsDeathTrigger) {
 			bpb.push_back(i);
-
 		}
 	}
 	
 	for (auto blockID : bpb) {
-		VSMath::Physics::ResolvePenetrationOnY(current.position, current.velocity, colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size, normal);
+		if (blocks->at(blockID).mIsCollidable) {
+			if (VSMath::Physics::ResolvePenetrationOnY(current.position, current.velocity, colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size, normal) && blocks->at(blockID).mIsDeathTrigger) {
+				death = true;
+			}
+		}
 	}
 	for (auto blockID : bpb) {
-		VSMath::Physics::ResolvePenetrationOnX(current.position, current.velocity, colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size, normal);
-		if (mWallHugRight && VSMath::Physics::RectVsRect(glm::vec2(current.position.x + colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
-			rightHugging = true;
+		if (blocks->at(blockID).mIsCollidable) {
+			if (VSMath::Physics::ResolvePenetrationOnX(current.position, current.velocity, colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size, normal) && blocks->at(blockID).mIsDeathTrigger) {
+				death = true;
+			}
+			if (mWallHugRight && VSMath::Physics::RectVsRect(glm::vec2(current.position.x + colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+				rightHugging = true;
+			}
+			else if (mWallHugLeft && VSMath::Physics::RectVsRect(glm::vec2(current.position.x - colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+				leftHugging = true;
+			}
 		}
-		else if (mWallHugLeft && VSMath::Physics::RectVsRect(glm::vec2(current.position.x - colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
-			leftHugging = true;
-		}
-		if (VSMath::Physics::RectVsRect(current.position, baseCollderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+		if (VSMath::Physics::RectVsRect(current.position, baseCollderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size) && blocks->at(blockID).mIsCollidable) {
 			mCanStand = false;
+		}
+		if (VSMath::Physics::RectVsRect(current.position, colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size) && blocks->at(blockID).mIsDeathTrigger) {
+			death = true;
 		}
 	}
 
@@ -102,6 +116,7 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 	else if (normal.x == 1 && current.velocity.y < 0.0f) {
 		mWallHugLeft = true;
 	}
+	death1 = death;
 }
 
 void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep) {

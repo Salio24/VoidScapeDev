@@ -10,5 +10,29 @@
     "properties": [
     ],
     "propertyTypes": [
+        {
+            "color": "#ffaa0000",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+                {
+                    "name": "Death_Trigger",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "Non_Collidable",
+                    "type": "bool",
+                    "value": false
+                }
+            ],
+            "name": "Collider",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        }
     ]
 }

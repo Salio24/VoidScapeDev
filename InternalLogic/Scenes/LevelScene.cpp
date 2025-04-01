@@ -127,10 +127,27 @@ void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::v
 				if (toLower(objectLayer.getName()) == "colliders") {
 					const auto& objects = objectLayer.getObjects();
 					for (const auto& object : objects) {
+						bool collidable = true;
+						bool deathTrigger = false;
+
+						const auto& props = object.getProperties();
+
+						for (const auto& prop : props) {
+							if (toLower(prop.getName()) == "death_trigger") {
+								deathTrigger = prop.getBoolValue();
+							}
+							else if (toLower(prop.getName()) == "non_collidable") {
+								if (prop.getBoolValue()) {
+									collidable = false;
+								}
+							}
+						}
+
 						auto aabb = object.getAABB();
 
 						GameObject obj;
-						obj.mIsCollidable = true;
+						obj.mIsCollidable = collidable;
+						obj.mIsDeathTrigger = deathTrigger;
 						obj.mSprite.mVertexData.Position = glm::vec2(((aabb.left) / gridSize.x) * blockSize, ((mapSize.height - (aabb.top + aabb.height)) / gridSize.y) * blockSize);
 						obj.mSprite.mVertexData.Size = glm::vec2((aabb.width / gridSize.x) * blockSize, (aabb.height / gridSize.y) * blockSize);
 						obj.mIsVisible = false;
@@ -148,7 +165,7 @@ void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::v
 						if (toLower(object.getName()) == "actor spawn" && object.getShape() == tmx::Object::Shape::Point) {
 							const auto pos = object.getPosition();
 
-							spawn = glm::vec2((pos.x / gridSize.x) * blockSize, ((mapSize.height - pos.y) / gridSize.y) * blockSize);
+							spawn = glm::vec2((pos.x / gridSize.x) * blockSize, ((mapSize.height - pos.y) / gridSize.y) * blockSize); 
 
 							spFound = true;
 						}

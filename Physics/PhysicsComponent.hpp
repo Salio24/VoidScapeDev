@@ -77,6 +77,8 @@ public:
 
 	void MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
 
+	bool GetDeath();
+
 	LookDirections mLookDirection = LookDirections::RIGHT;
 
 	bool mWallHugLeft{ false };
@@ -119,6 +121,7 @@ public:
 	bool testButton3{ false };
 
 
+
 private:
 	glm::vec2 acceleration{ 0.0f };
 
@@ -136,5 +139,7 @@ private:
 	int jumpBufferTimer{ -1 };
 
 	int coyoteTimeTimer{ -1 };
+
+	bool death1{ false };
 };
 
