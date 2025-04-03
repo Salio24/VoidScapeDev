@@ -1,61 +1,18 @@
-# Build artifacts
-/build/
-/bin/
-/Debug/
-/Release/
-/x64
-/Builds
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
 
-# Libraries
-/include
-/src
-/lib
-
-# Compiled object files
-*.o
-*.obj
-
-# Precompiled headers
-*.gch
-*.pch
-
-# Dynamic libraries
-*.dll
-*.so
-*.dylib
-
-# Static libraries
-*.lib
-*.a
-
-# Executable files
-*.exe
-*.out
-*.app
-
-# Debug and symbol files
-*.pdb
-*.dSYM/
-*.ilk
-
-# CMake-generated files (if using CMake)
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-
-# JetBrains Rider settings
-.idea/
-
-# VS settings
-.vs/
-
-# OS-specific files
-.DS_Store
-Thumbs.db
-Game/Game/Game.vcxproj.user
-Game/Game/x64
-/Game.vcxproj.user
-*.TMP
-/levels/Levels.tiled-session
-/levels/GameLevels/32p/test.tmx
+/.vs
+/Apps/Sandbox/Build/Debug
+/Apps/Sandbox/Build/Release
+/Apps/Sandbox/Build/RelWithDebInfo
+/CoriEngine/thirdparty/freetype/*
+/CoriEngine/thirdparty/glad2/*
+/CoriEngine/thirdparty/glm/*
+/CoriEngine/thirdparty/imgui/*
+/CoriEngine/thirdparty/nlohmann_json/*
+/CoriEngine/thirdparty/SDL3/*
+/CoriEngine/thirdparty/SDL3_image/*
+/CoriEngine/thirdparty/SDL3_mixer/*
+/CoriEngine/thirdparty/tmxlite/*
+/out/build
