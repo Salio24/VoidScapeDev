@@ -654,7 +654,7 @@ void SceneManager::ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introM
 	case Levels::LEVEL_1:
 		mLevelScene.mLevelBlocks.clear();
 		//mLevelScene.LoadLevel("levels/GameLevels/32p/Level_1.json", tilesetOffset);
-		mLevelScene.LoadLevelTMX("levels/GameLevels/32p/Level_1.tmx", tilesetOffset, spawn);
+		mLevelScene.LoadLevelTMX("levels/GameLevels/32p/Level_1_V1.tmx", tilesetOffset, spawn);
 
 		mCurrentBlocks = &mLevelScene.mLevelBlocks;
 		mLevelActive = true;
