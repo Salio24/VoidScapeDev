@@ -2,7 +2,7 @@
 
 BlackHole::BlackHole() : gen(rd()), randomVelocity(1.0f, 5.0f) {
 	mSprite.mVertexData.Size = glm::vec2(400.0f, 400.0f);
-	AABBVelocityMultiplier = 360.0f;
+	AABBVelocityMultiplier = 60.0f;
 
 	mSprite.mVertexData.Position = (epicenterAABBPos + epicenterAABBSize / 2.0f) - mSprite.mVertexData.Size / 2.0f;
 }
@@ -12,6 +12,8 @@ BlackHole::~BlackHole() {
 }
 
 void BlackHole::Update(std::vector<GameObject>* blocks, Actor& actor, const float& deltaTime, Animation& birthAnim, Animation& loopAnim, Mix_Chunk* bornSound, Mix_Chunk* consumedSound, Mix_Chunk* blackHoleIdle, const float globalSFXVolumeModifier, DeathCause actorDeathCause) {
+	mSprite.mVertexData.Position = (epicenterAABBPos + epicenterAABBSize / 2.0f) - mSprite.mVertexData.Size / 2.0f;
+	
 	if (!birthTimerOneShot && !isBorn) {
 		mSprite.mVertexData.TexturePosition = loopAnim.TexturePosition;
 		birthAnim.AnimationTimer = std::chrono::high_resolution_clock::now();
@@ -67,6 +69,7 @@ void BlackHole::Update(std::vector<GameObject>* blocks, Actor& actor, const floa
 		actor.mIsSucked = true;
 		actor.mFlyDirectionNormalized = glm::normalize(epicenterAABBPos - actor.mPosition);
 		actor.mVelocity = actor.mFlyDirectionNormalized * (float)randomVelocity(gen);
+		actor.mDead = true;
 	}
 	if (actor.mIsSucked == true) {
 		if (actor.mPosition.x <= epicenterAABBPos.x + epicenterAABBSize.x / 2) {
@@ -183,5 +186,5 @@ void BlackHole::Reset() {
 	loopTimerOneShot = false;
 	birthTimerOneShot = false;
 	idleVolume = 0;
-	AABBSize.x = 350.0f;
+	AABBSize.x = 0.0f;
 }

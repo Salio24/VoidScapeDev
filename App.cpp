@@ -34,7 +34,7 @@ void App::StartUp() {
 		}
 	}
 
-	mSettings.screenSize.x = bounds.w;
+	mSettings.screenSize.x = bounds.w; 
 	mSettings.screenSize.y = bounds.h;
 
 	mResolutions.push_back(glm::ivec2(854, 480));
@@ -313,7 +313,7 @@ void App::LoadGame(const bool retry, bool reload, glm::vec2 spawnpoint) {
 		mSceneManager.LoadMainMenu(mTextureHandler.mTilesetLocations.mUIBorderTileset.second);
 	}
 	else if (retry && !reload) {
-		mSceneManager.ReloadCurrentLevel(mTextureHandler.mTilesetLocations.mBaseTileset.second, mAudioHandler.IntroMusic, aaaa);
+		mSceneManager.ReloadCurrentLevel(mTextureHandler.mTilesetLocations.mBaseTileset.second, mAudioHandler.IntroMusic, aaaa, aaaa, aaaa);
 	}
 
 	mSceneManager.mUIScenes.LoadPauseMenu(mTextureHandler.mTilesetLocations.mUIBorderTileset.second);
@@ -636,7 +636,7 @@ void App::Update() {
 			}
 		}
 
-		mSceneManager.UpdateUIMenu(mTextureHandler.mTilesetLocations.mBaseTileset.second, deltaTimeOld, mWindowWidth, mWindowHeight, mQuit, mWindowModes, mResolutions, mWindow, restart, reload, spawn);
+		mSceneManager.UpdateUIMenu(mTextureHandler.mTilesetLocations.mBaseTileset.second, deltaTimeOld, mWindowWidth, mWindowHeight, mQuit, mWindowModes, mResolutions, mWindow, restart, reload, spawn, mBlackHole.epicenterAABBPos, mEscapePortal.mSprite.mVertexData.Position);
 
 		mBatchRenderer.BeginBatch(mCamera.GetProjectionMatrix(), &mCamera.mUIModelMatrix);
 		glActiveTexture(GL_TEXTURE0);

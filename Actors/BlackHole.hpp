@@ -22,7 +22,7 @@ public:
 
 	void Reset();
 	 
-	glm::vec2 AABBSize { 350.0f, 1080.0f };
+	glm::vec2 AABBSize { 0.0f, 1080.0f };
 	glm::vec2 epicenterAABBPos{ 0.0f, 520.0f };
 	glm::vec2 epicenterAABBSize{ 40.0f, 40.0f };
 private: 

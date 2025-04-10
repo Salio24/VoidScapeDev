@@ -16,7 +16,7 @@ public:
 
 	void LoadLevel(std::string path, const int& tilesetOffset);
 
-	void LoadLevelTMX(std::string path, const int& tilesetOffset, glm::vec2& spawn);
+	void LoadLevelTMX(std::string path, const int& tilesetOffset, glm::vec2& spawn, glm::vec2& BlackHolePos, glm::vec2& EscapePortalPos);
 
 	std::vector<GameObject> mLevelBlocks;
 

@@ -10,12 +10,12 @@ EscapePortal::~EscapePortal() {
 }
 
 void EscapePortal::Update(Animation& portalAnim, const float& deltaTime, Actor& actor, Mix_Chunk* portalSoundEscape, Mix_Chunk* portalSoundIdle, const float globalSFXVolumeModifier) {
+	epicenterAABBPos = glm::vec2(mSprite.mVertexData.Position.x + mSprite.mVertexData.Size.x / 2.0f, mSprite.mVertexData.Position.y + mSprite.mVertexData.Size.y / 4);
+	AABBPos = glm::vec2(epicenterAABBPos.x + epicenterAABBSize.x / 2.0f - AABBSize.x / 2.0f, epicenterAABBPos.y + epicenterAABBSize.y / 2.0f - AABBSize.y / 2.0f);
 	if (animationOneShot) {
-		epicenterAABBPos = glm::vec2(mSprite.mVertexData.Position.x + mSprite.mVertexData.Size.x / 2.0f, mSprite.mVertexData.Position.y + mSprite.mVertexData.Size.y / 4);
 		epicenterAABBSize = glm::vec2(mSprite.mVertexData.Size.x / 4, mSprite.mVertexData.Size.y / 2);
 
 		AABBSize = glm::vec2(250.0f, 250.0f);
-		AABBPos = glm::vec2(epicenterAABBPos.x + epicenterAABBSize.x / 2.0f - AABBSize.x / 2.0f, epicenterAABBPos.y + epicenterAABBSize.y / 2.0f - AABBSize.y / 2.0f);
 
 		mSprite.mVertexData.TexturePosition = portalAnim.TexturePosition;
 		portalAnim.AnimationTimer = std::chrono::high_resolution_clock::now();

@@ -97,7 +97,7 @@ void LevelScene::LoadLevel(std::string path, const int& tilesetOffset) {
 	}
 }
 
-void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::vec2& spawn) {
+void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::vec2& spawn, glm::vec2& BlackHolePos, glm::vec2& EscapePortalPos) {
 	
 	tmx::Object::Shape shape;
 
@@ -106,6 +106,10 @@ void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::v
 	static int GDI = 0;
 
 	bool spFound = false;
+
+	bool bhFound = false;
+
+	bool epFound = false;
 
 	if (map.load(path)) {
 		const auto& layers = map.getLayers();
@@ -169,6 +173,20 @@ void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::v
 
 							spFound = true;
 						}
+						if (toLower(object.getName()) == "black hole" && object.getShape() == tmx::Object::Shape::Point) {
+							const auto pos = object.getPosition();
+
+							BlackHolePos = glm::vec2((pos.x / gridSize.x) * blockSize, ((mapSize.height - pos.y) / gridSize.y) * blockSize);
+
+							bhFound = true;
+						}
+						if (toLower(object.getName()) == "escape portal" && object.getShape() == tmx::Object::Shape::Point) {
+							const auto pos = object.getPosition();
+
+							EscapePortalPos = glm::vec2((pos.x / gridSize.x) * blockSize, ((mapSize.height - pos.y) / gridSize.y) * blockSize);
+
+							epFound = true;
+						}
 					}
 
 					
@@ -202,9 +220,16 @@ void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::v
 		}
 
 		if (!spFound) {
-			std::cout << "Spawn point not specified on the level, defaulting" << std::endl;
+			std::cout << "Actor spawn point not specified on the level, defaulting" << std::endl;
 			spawn = glm::vec2(500.0f);
 		}
+		if (!bhFound) {
+			std::cout << "Black Hole spawn point not specified on the level, defaulting" << std::endl;
+		}
+		if (!epFound) {
+			std::cout << "Escape Portal spawn not specified on the level, defaulting" << std::endl;
+		}
+
 
 		const auto& tilesets = map.getTilesets();
 		for (const auto& tileset : tilesets) {

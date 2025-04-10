@@ -17,7 +17,7 @@ public:
 
 	~SceneManager();
 
-	void UpdateUIMenu(int tilesetOffset, float deltaTime, int& windowWidth, int& windowHeight, bool& quit, std::vector<std::string>& windowModes, std::vector<glm::ivec2>& resolutions, SDL_Window* window, bool& restart, bool& reload, glm::vec2& spawn);
+	void UpdateUIMenu(int tilesetOffset, float deltaTime, int& windowWidth, int& windowHeight, bool& quit, std::vector<std::string>& windowModes, std::vector<glm::ivec2>& resolutions, SDL_Window* window, bool& restart, bool& reload, glm::vec2& spawn, glm::vec2& BlackHolePos, glm::vec2& EscapePortalPos);
 
 	void UpdateUIInGame(bool& restart, bool& restartMode, const bool actorDead, const bool actorEscaped, bool& pause, const bool gameStarted, const glm::mat4& projectionMatrix, const glm::mat4& UImodelMatrix, float deltaTime, DeathCause actorDeathCause, ShaderProgram* textShader, GLuint pipelineID, int fps, GLuint arrayTexture);
 
@@ -29,9 +29,9 @@ public:
 
 	void LoadMainMenu(const int& tilesetOffset);
 
-	void ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introMusic, glm::vec2& spawn);
+	void ReloadCurrentLevel(const int tilesetOffset, Mix_Music* introMusic, glm::vec2& spawn, glm::vec2& BlackHolePos, glm::vec2& EscapePortalPos);
 
-	void LoadLevel(Levels level, const int tilesetOffset, Mix_Music* introMusic, bool& restart, bool& reload, glm::vec2& spawn);
+	void LoadLevel(Levels level, const int tilesetOffset, Mix_Music* introMusic, bool& restart, bool& reload, glm::vec2& spawn, glm::vec2& BlackHolePos, glm::vec2& EscapePortalPos);
 
 	bool mLevelActive{ false };
 
