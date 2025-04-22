@@ -217,7 +217,6 @@ void App::PostStartUp() {
 		mTextureHandler.mTextureArrays[512].second++;
 	}
 
-
 	mAnimationHandler.Init();
 
 	Mix_AllocateChannels(20);

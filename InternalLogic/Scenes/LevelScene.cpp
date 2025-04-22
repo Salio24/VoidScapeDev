@@ -183,7 +183,7 @@ void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::v
 						if (toLower(object.getName()) == "escape portal" && object.getShape() == tmx::Object::Shape::Point) {
 							const auto pos = object.getPosition();
 
-							EscapePortalPos = glm::vec2((pos.x / gridSize.x) * blockSize, ((mapSize.height - pos.y) / gridSize.y) * blockSize);
+							EscapePortalPos = glm::vec2((pos.x / gridSize.x) * blockSize, ((mapSize.height - pos.y) / gridSize.y) * blockSize) - glm::vec2(103.125f * 0.5, 193.75f * 0.5);
 
 							epFound = true;
 						}
