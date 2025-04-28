@@ -13,6 +13,8 @@ App& Camera::app() {
 }
 
 void Camera::Update(glm::vec2& actorVelocity, glm::vec2& actorScreenPosition, const float& deltaTime) {
+	static float offsetOnY = 540.0f;
+
 	if (app().mActor.mPosition.x > 0.0f) {
 		if (int(actorVelocity.x) > 0.0f && cameraOffsetTimerBuffer2 <= 0.0f) {
 			mCameraOffset.x += (actorVelocity.x * deltaTime) / 5.0f;
@@ -61,9 +63,9 @@ void Camera::Update(glm::vec2& actorVelocity, glm::vec2& actorScreenPosition, co
 		}
 
 		
-		projectionMatrix = glm::translate(initialProjectionMatrix, glm::vec3(-(app().mActor.mPosition.x - 800.0f + mCameraOffset.x), 0.0f, 0.0f));
+		projectionMatrix = glm::translate(initialProjectionMatrix, glm::vec3(-(app().mActor.mPosition.x - 800.0f + mCameraOffset.x), -(app().mActor.mPosition.y - offsetOnY), 0.0f));
 
-		mUIModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3((app().mActor.mPosition.x - 800.0f + mCameraOffset.x), 0.0f, 0.0f));
+		mUIModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3((app().mActor.mPosition.x - 800.0f + mCameraOffset.x), app().mActor.mPosition.y - offsetOnY, 0.0f));
 	}
 
 	mCameraPosition.x = app().mActor.mPosition.x - (1.0f + actorScreenPosition.x) * 960.0f + app().mActor.mSprite.mVertexData.Size.x / 2.0f;
