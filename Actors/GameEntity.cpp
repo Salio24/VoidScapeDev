@@ -1,3 +1,4 @@
+
 #include "GameEntity.hpp"
 
 GameEntity::GameEntity() {

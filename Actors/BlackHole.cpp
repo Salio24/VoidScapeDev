@@ -1,3 +1,5 @@
+
+
 #include "BlackHole.hpp" 
 
 BlackHole::BlackHole() : gen(rd()), randomVelocity(1.0f, 5.0f) {

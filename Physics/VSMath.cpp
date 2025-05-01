@@ -1,3 +1,4 @@
+
 #include "VSMath.hpp"
 
 namespace {

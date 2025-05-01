@@ -1,3 +1,4 @@
+
 #include "BatchRenderer.hpp"
 
 BatchRenderer::BatchRenderer() {

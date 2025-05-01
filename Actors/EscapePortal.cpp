@@ -1,3 +1,4 @@
+
 #include "EscapePortal.hpp"
 
 EscapePortal::EscapePortal() {

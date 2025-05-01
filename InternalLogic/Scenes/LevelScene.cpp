@@ -1,3 +1,4 @@
+
 #include "LevelScene.hpp"
 #include <fstream>
 #include <tmxlite/Map.hpp>
@@ -225,9 +226,11 @@ void LevelScene::LoadLevelTMX(std::string path, const int& tilesetOffset, glm::v
 		}
 		if (!bhFound) {
 			std::cout << "Black Hole spawn point not specified on the level, defaulting" << std::endl;
+			BlackHolePos = glm::vec2(0.0f, 540.0f);
 		}
 		if (!epFound) {
 			std::cout << "Escape Portal spawn not specified on the level, defaulting" << std::endl;
+			EscapePortalPos = glm::vec2(20000.0f, 500.0f);
 		}
 
 

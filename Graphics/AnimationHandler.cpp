@@ -1,3 +1,4 @@
+
 #include "AnimationHandler.hpp"
 
 AnimationHandler::AnimationHandler(TextureHandler& textureHandlerRef) : textureHandlerRef(textureHandlerRef) {
