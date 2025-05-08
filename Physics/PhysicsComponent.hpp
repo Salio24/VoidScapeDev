@@ -61,6 +61,14 @@ struct PhysicsSettings {
 };
 */
 
+enum class PlayerWallInteractionState {
+	NONE,                   // Not interacting with a wall
+	CAN_JUMP_OR_SLIDE_LEFT, // Touching a wall on the left, eligible for actions
+	CAN_JUMP_OR_SLIDE_RIGHT,// Touching a wall on the right, eligible for actions
+	SLIDING_LEFT,           // Actively sliding on a wall to the left
+	SLIDING_RIGHT           // Actively sliding on a wall to the right
+};
+
 class PhysicsComponent {
 public:
 	PhysicsComponent();
@@ -78,6 +86,8 @@ public:
 	void MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
 
 	bool GetDeath();
+
+	PlayerWallInteractionState mWallInteractionState{ PlayerWallInteractionState::NONE }; // Add this line
 
 	LookDirections mLookDirection = LookDirections::RIGHT;
 
@@ -119,8 +129,7 @@ public:
 
 	bool testButton4{ false };
 	bool testButton3{ false };
-
-
+	
 
 private:
 	glm::vec2 acceleration{ 0.0f };
