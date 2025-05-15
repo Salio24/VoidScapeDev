@@ -124,119 +124,9 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep) {
 	acceleration = glm::vec2(0.0f, 0.0f);
 
-	// Gravity
-	if (current.velocity.y <= 0 && current.velocity.y > mPhysicsSettings.FallSpeedLimit) {
-		acceleration.y += mPhysicsSettings.GravityDOWN;
-	}
-	else if (current.velocity.y > 0) {
-		acceleration.y += mPhysicsSettings.GravityUP;
-	}
-
-	// Fall speed limit
-	if (current.velocity.y < mPhysicsSettings.FallSpeedLimit) {
-		acceleration.y += -(current.velocity.y - mPhysicsSettings.FallSpeedLimit) / timeStep;
-	}
-
-	if (Sign(current.velocity.x) == -1) {
-		mLookDirection = LookDirections::LEFT;
-	}
-	else if (Sign(current.velocity.x) == 1) {
-		mLookDirection = LookDirections::RIGHT;
-	}
-
-	if (!mCanStand) {
-		mCrouching = true;
-	}
-
-	// Movement on X-axis (run) on ground and mid air
-	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
-		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit && !mSliding && !mCrouching) {
-			if (mGrounded) {
-				// run
-				if (current.velocity.x - mPhysicsSettings.RunAccelerationOnFoot * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
-					acceleration.x += -mPhysicsSettings.RunAccelerationOnFoot;
-				}
-				else if (current.velocity.x < 0.0f) {
-					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
-				}
-			}
-			else {
-				// mid air
-				if (current.velocity.x - mPhysicsSettings.RunAccelerationMidAir * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
-					acceleration.x += -mPhysicsSettings.RunAccelerationMidAir;
-				}
-				else if (current.velocity.x < 0.0f) {
-					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
-				}
-			}
-		}
-		else if (current.velocity.x < -mPhysicsSettings.RunSpeedLimit && mGrounded) {
-			acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
-		}
-
-		// crouch
-		if (current.velocity.x > -mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
-			if (current.velocity.x - mPhysicsSettings.CrouchAcceleration * timeStep >= -mPhysicsSettings.CrouchSpeedLimit) {
-				acceleration.x += -mPhysicsSettings.CrouchAcceleration;
-			}
-			else if (current.velocity.x < 0.0f) {
-				acceleration.x += -(current.velocity.x + mPhysicsSettings.CrouchSpeedLimit) / timeStep;
-			}
-		}
-		else if (current.velocity.x < -mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
-			acceleration.x += -(current.velocity.x + mPhysicsSettings.CrouchSpeedLimit) / timeStep;
-		}
-
-		mLookDirection = LookDirections::LEFT;
-	}
-	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) {
-		if (current.velocity.x < mPhysicsSettings.RunSpeedLimit && !mSliding && !mCrouching) {
-			if (mGrounded) {
-				if (current.velocity.x + mPhysicsSettings.RunAccelerationOnFoot * timeStep <= mPhysicsSettings.RunSpeedLimit) {
-					acceleration.x += mPhysicsSettings.RunAccelerationOnFoot;
-				}
-				else if (current.velocity.x > 0.0f) {
-					acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
-				}
-			}
-			else {
-				if (current.velocity.x + mPhysicsSettings.RunAccelerationMidAir * timeStep <= mPhysicsSettings.RunSpeedLimit) {
-					acceleration.x += mPhysicsSettings.RunAccelerationMidAir;
-				}
-				else if (current.velocity.x > 0.0f) {
-					acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
-				}
-			}
-		}
-		else if (current.velocity.x > mPhysicsSettings.RunSpeedLimit && mGrounded) {
-			acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
-		}
-
-		if (current.velocity.x < mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
-			if (current.velocity.x + mPhysicsSettings.CrouchAcceleration * timeStep <= mPhysicsSettings.CrouchSpeedLimit) {
-				acceleration.x += mPhysicsSettings.CrouchAcceleration;
-			}
-			else if (current.velocity.x > 0.0f) {
-				acceleration.x += -(current.velocity.x - mPhysicsSettings.CrouchSpeedLimit) / timeStep;
-			}
-		}
-		else if (current.velocity.x > mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
-			acceleration.x += -(current.velocity.x - mPhysicsSettings.CrouchSpeedLimit) / timeStep;
-		}
-
-		mLookDirection = LookDirections::RIGHT;
-	}
-
-	// for state machine
-	mActiveRunning = false;
-	mPassiveRunning = false;
-	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded && !mSliding && !mCrouching) {
-		mActiveRunning = true;
-	}
-	else if (!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded) {
-		mPassiveRunning = true;
-	}
-
+	HandleGravityAndFalling(timeStep);
+	HandleHorizontalMovement(activeKeys, timeStep);
+	HandleStateMachine(activeKeys);
 
 	// Friction on gound and air resistance mid air
 	if ((!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) || mSliding) && std::abs(current.velocity.x) > 0.0f) {
@@ -459,6 +349,122 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 		mSliding = false;
 		mCrouching = false;
 	}
-
 	// todo, global speed limits
+}
+
+void PhysicsComponent::HandleHorizontalMovement(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep) {
+	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
+		if (current.velocity.x > -mPhysicsSettings.RunSpeedLimit && !mSliding && !mCrouching) {
+			if (mGrounded) {
+				// run
+				if (current.velocity.x - mPhysicsSettings.RunAccelerationOnFoot * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += -mPhysicsSettings.RunAccelerationOnFoot;
+				}
+				else if (current.velocity.x < 0.0f) {
+					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
+				}
+			}
+			else {
+				// mid air
+				if (current.velocity.x - mPhysicsSettings.RunAccelerationMidAir * timeStep >= -mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += -mPhysicsSettings.RunAccelerationMidAir;
+				}
+				else if (current.velocity.x < 0.0f) {
+					acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
+				}
+			}
+		}
+		else if (current.velocity.x < -mPhysicsSettings.RunSpeedLimit && mGrounded) {
+			acceleration.x += -(current.velocity.x + mPhysicsSettings.RunSpeedLimit) / timeStep;
+		}
+
+		// crouch
+		if (current.velocity.x > -mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			if (current.velocity.x - mPhysicsSettings.CrouchAcceleration * timeStep >= -mPhysicsSettings.CrouchSpeedLimit) {
+				acceleration.x += -mPhysicsSettings.CrouchAcceleration;
+			}
+			else if (current.velocity.x < 0.0f) {
+				acceleration.x += -(current.velocity.x + mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+			}
+		}
+		else if (current.velocity.x < -mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			acceleration.x += -(current.velocity.x + mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+		}
+
+		mLookDirection = LookDirections::LEFT;
+	}
+	if (activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) {
+		if (current.velocity.x < mPhysicsSettings.RunSpeedLimit && !mSliding && !mCrouching) {
+			if (mGrounded) {
+				if (current.velocity.x + mPhysicsSettings.RunAccelerationOnFoot * timeStep <= mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += mPhysicsSettings.RunAccelerationOnFoot;
+				}
+				else if (current.velocity.x > 0.0f) {
+					acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
+				}
+			}
+			else {
+				if (current.velocity.x + mPhysicsSettings.RunAccelerationMidAir * timeStep <= mPhysicsSettings.RunSpeedLimit) {
+					acceleration.x += mPhysicsSettings.RunAccelerationMidAir;
+				}
+				else if (current.velocity.x > 0.0f) {
+					acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
+				}
+			}
+		}
+		else if (current.velocity.x > mPhysicsSettings.RunSpeedLimit && mGrounded) {
+			acceleration.x += -(current.velocity.x - mPhysicsSettings.RunSpeedLimit) / timeStep;
+		}
+
+		if (current.velocity.x < mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			if (current.velocity.x + mPhysicsSettings.CrouchAcceleration * timeStep <= mPhysicsSettings.CrouchSpeedLimit) {
+				acceleration.x += mPhysicsSettings.CrouchAcceleration;
+			}
+			else if (current.velocity.x > 0.0f) {
+				acceleration.x += -(current.velocity.x - mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+			}
+		}
+		else if (current.velocity.x > mPhysicsSettings.CrouchSpeedLimit && mCrouching) {
+			acceleration.x += -(current.velocity.x - mPhysicsSettings.CrouchSpeedLimit) / timeStep;
+		}
+
+		mLookDirection = LookDirections::RIGHT;
+	}
+}
+
+void PhysicsComponent::HandleGravityAndFalling(double timeStep) {
+	// Gravity
+	if (current.velocity.y <= 0 && current.velocity.y > mPhysicsSettings.FallSpeedLimit) {
+		acceleration.y += mPhysicsSettings.GravityDOWN;
+	}
+	else if (current.velocity.y > 0) {
+		acceleration.y += mPhysicsSettings.GravityUP;
+	}
+
+	// Fall speed limit
+	if (current.velocity.y < mPhysicsSettings.FallSpeedLimit) {
+		acceleration.y += -(current.velocity.y - mPhysicsSettings.FallSpeedLimit) / timeStep;
+	}
+
+	if (Sign(current.velocity.x) == -1) {
+		mLookDirection = LookDirections::LEFT;
+	}
+	else if (Sign(current.velocity.x) == 1) {
+		mLookDirection = LookDirections::RIGHT;
+	}
+
+	if (!mCanStand) {
+		mCrouching = true;
+	}
+}
+
+void PhysicsComponent::HandleStateMachine(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
+	mActiveRunning = false;
+	mPassiveRunning = false;
+	if ((activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded && !mSliding && !mCrouching) {
+		mActiveRunning = true;
+	}
+	else if (!(activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)] || activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) && std::abs(current.velocity.x) > 0.0f && mGrounded) {
+		mPassiveRunning = true;
+	}
 }

@@ -121,8 +121,13 @@ public:
 	bool testButton3{ false };
 
 
-
 private:
+	void HandleHorizontalMovement(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
+
+	void HandleGravityAndFalling(double timeStep);
+
+	void HandleStateMachine(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
+	
 	glm::vec2 acceleration{ 0.0f };
 
 	PhysicsState previous;
