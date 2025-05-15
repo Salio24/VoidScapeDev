@@ -19,7 +19,7 @@ void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<Ga
 	previous = current;
 	MovementUpdate(activeKeys, timeStep);
 	VSMath::RK4_IntegrateVec2(current, 0.0f, timeStep, acceleration);
-	CollisionUpdate(blocks, colliderSize);
+	CollisionUpdate(blocks, colliderSize, activeKeys);
 
 	//std::cout << normal.x << std::endl;
 	
@@ -41,7 +41,7 @@ void PhysicsComponent::SetPosition(glm::vec2 position) {
 	current.position = position;
 }
 
-void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 colliderSize) {
+void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 colliderSize, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]) {
 
 	normal = glm::vec2(0.0f);
 
@@ -112,10 +112,10 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 		mWallHugLeft = false;
 	}
 
-	if (normal.x == -1 && current.velocity.y < 0.0f) {
+	if (normal.x == -1 && current.velocity.y < 0.0f && activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) {
 		mWallHugRight = true;
 	} 
-	else if (normal.x == 1 && current.velocity.y < 0.0f) {
+	else if (normal.x == 1 && current.velocity.y < 0.0f && activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
 		mWallHugLeft = true;
 	}
 	death1 = death;
@@ -405,7 +405,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 			acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
 		}
 
-		if (current.velocity.x < 0.0f) {
+		if (!activeKeys[static_cast<int>(ActiveKeys::MOVE_RIGHT)]) {
 			mWallHugRight = false;
 		}
 	}
@@ -416,7 +416,7 @@ void PhysicsComponent::MovementUpdate(bool activeKeys[static_cast<int>(ActiveKey
 			acceleration.y = -(current.velocity.y + mPhysicsSettings.WallSlideSpeed) / timeStep;
 		}
 
-		if (current.velocity.x > 0.0f) {
+		if (!activeKeys[static_cast<int>(ActiveKeys::MOVE_LEFT)]) {
 			mWallHugLeft = false;
 		}
 	}

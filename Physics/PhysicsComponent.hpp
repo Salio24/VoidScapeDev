@@ -73,7 +73,7 @@ public:
 
 	void SetPosition(glm::vec2 position);
 
-	void CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 colliderSize);
+	void CollisionUpdate(const std::vector<GameObject>* blocks, glm::vec2 colliderSize, bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
 
 	void MovementUpdate(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
 
