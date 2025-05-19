@@ -123,10 +123,11 @@ public:
 
 private:
 	void HandleHorizontalMovement(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
-
 	void HandleGravityAndFalling(double timeStep);
-
 	void HandleStateMachine(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
+	void HandleFrictionAndResistance(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
+	void HandleSlide(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)]);
+	void HandleJumpsAndCoyoteTime(bool activeKeys[static_cast<int>(ActiveKeys::DUCK)], double timeStep);
 	
 	glm::vec2 acceleration{ 0.0f };
 
