@@ -23,7 +23,9 @@ void PhysicsComponent::FixedTickrateUpdate(double timeStep, const std::vector<Ga
 
 	//std::cout << normal.x << std::endl;
 	
-	std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
+	//std::cout << "Vel: " << glm::to_string(current.velocity) << " Pos: " << glm::to_string(current.position) << " Acc: " << glm::to_string(acceleration) << std::endl;
+
+	//std::cout << "NLeft: " << std::boolalpha << m_NearLeftWall << " : NRight: " << std::boolalpha << m_NearRightWall << std::endl;
 }
 
 std::pair<glm::vec2, glm::vec2> PhysicsComponent::Update(double accumulator, double timeStep) {
@@ -55,6 +57,9 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 
 	bool rightHugging = false;
 	bool leftHugging = false;
+
+	bool nearWallCollCheckLeft = false;
+	bool nearWallCollCheckRight = false;
 
 	mCanStand = true;
 
@@ -89,6 +94,13 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 			else if (mWallHugLeft && VSMath::Physics::RectVsRect(glm::vec2(current.position.x - colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
 				leftHugging = true;
 			}
+
+			if (VSMath::Physics::RectVsRect(glm::vec2(current.position.x - colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+				nearWallCollCheckLeft = true;
+			} 
+			else if (VSMath::Physics::RectVsRect(glm::vec2(current.position.x + colliderSize.x / 4, current.position.y), colliderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size)) {
+				nearWallCollCheckRight = true;
+			}
 		}
 		if (VSMath::Physics::RectVsRect(current.position, baseCollderSize, blocks->at(blockID).mSprite.mVertexData.Position, blocks->at(blockID).mSprite.mVertexData.Size) && blocks->at(blockID).mIsCollidable) {
 			mCanStand = false;
@@ -104,6 +116,39 @@ void PhysicsComponent::CollisionUpdate(const std::vector<GameObject>* blocks, gl
 	else {
 		mGrounded = false;
 	} 
+
+	// check if actor is next to a wall
+
+	if (normal.x == -1) {
+		m_WasNearRightWall = true;
+	}
+	if (normal.x == 1) {
+		m_WasNearLeftWall = true;
+	}
+
+	if (m_WasNearLeftWall && current.velocity.x != 0.0f) {
+		m_WasNearLeftWall = false;
+	}
+
+	if (m_WasNearRightWall && current.velocity.x != 0.0f) {
+		m_WasNearRightWall = false;
+	}
+
+	if (m_WasNearLeftWall && nearWallCollCheckLeft) {
+		m_NearLeftWall = true;
+	}
+	else {
+		m_NearLeftWall = false;
+	}
+
+	if (m_WasNearRightWall && nearWallCollCheckRight) {
+		m_NearRightWall = true;
+	}
+	else {
+		m_NearRightWall = false;
+	}
+
+	//
 
 	if (!rightHugging && mWallHugRight) {
 		mWallHugRight = false;
@@ -355,6 +400,10 @@ void PhysicsComponent::HandleJumpsAndCoyoteTime(bool activeKeys[static_cast<int>
 		mCoyoteTimeActive = false;
 	}
 
+	static bool oldLeftWallNearCheck = false;
+	static bool oldRightWallNearCheck = false;
+
+
 	// jumps etc
 	if (activeKeys[static_cast<int>(ActiveKeys::SPACE)]) {
 		if (mDoubleJumping && doubleJumpTickTimer < mPhysicsSettings.VariableDoubleJumpTicks) {
@@ -367,7 +416,23 @@ void PhysicsComponent::HandleJumpsAndCoyoteTime(bool activeKeys[static_cast<int>
 
 		if (mSpacebarOneShot) {
 
-			if (!(mWallHugLeft || mWallHugRight)) {
+			if ((m_NearRightWall || m_NearLeftWall) && !mGrounded) {
+				mWallJumping = true;
+
+				wallJumpTickTimer = 0;
+
+				acceleration.y = -current.velocity.y / timeStep;
+				acceleration.y += mPhysicsSettings.WallJumpStartImpulse;
+				if (m_NearRightWall) {
+					acceleration.x += -mPhysicsSettings.WallJumpStartSideImpulse;
+				}
+				else if (m_NearLeftWall) {
+					acceleration.x += mPhysicsSettings.WallJumpStartSideImpulse;
+				}
+				mWallHugRight = false;
+				mWallHugLeft = false;
+			}
+			else {
 				if (!mGrounded && mDoubleJumpAvailable && !mCoyoteTimeActive) {
 					mDoubleJumpAvailable = false;
 					mDoubleJumping = true;
@@ -379,23 +444,39 @@ void PhysicsComponent::HandleJumpsAndCoyoteTime(bool activeKeys[static_cast<int>
 					jumpBufferTimer = 0;
 				}
 			}
-			else {
-				mWallJumping = true;
 
-				wallJumpTickTimer = 0;
-
-				acceleration.y = -current.velocity.y / timeStep;
-				acceleration.y += mPhysicsSettings.WallJumpStartImpulse;
-				if (mWallHugRight) {
-					acceleration.x += -mPhysicsSettings.WallJumpStartSideImpulse;
+			/*
+			if (!(mWallHugLeft || mWallHugRight)) {
+				if (!mGrounded && mDoubleJumpAvailable && !mCoyoteTimeActive) {
+					//mDoubleJumpAvailable = false;
+					//mDoubleJumping = true;
+					//doubleJumpTickTimer = 0;
+					//acceleration.y = -current.velocity.y / timeStep;
+					//acceleration.y += mPhysicsSettings.DoubleJumpStartImpulse;
 				}
-				else if (mWallHugLeft) {
-					acceleration.x += mPhysicsSettings.WallJumpStartSideImpulse;
+				else {
+					//jumpBufferTimer = 0;
 				}
-
-				mWallHugRight = false;
-				mWallHugLeft = false;
 			}
+			else {
+				
+				//mWallJumping = true;
+				//
+				//wallJumpTickTimer = 0;
+				//
+				//acceleration.y = -current.velocity.y / timeStep;
+				//acceleration.y += mPhysicsSettings.WallJumpStartImpulse;
+				//if (mWallHugRight) {
+				//	acceleration.x += -mPhysicsSettings.WallJumpStartSideImpulse;
+				//}
+				//else if (mWallHugLeft) {
+				//	acceleration.x += mPhysicsSettings.WallJumpStartSideImpulse;
+				//}
+				//
+				//mWallHugRight = false;
+				//mWallHugLeft = false;
+			}
+			*/
 
 			mSpacebarOneShot = false;
 		}
@@ -472,4 +553,8 @@ void PhysicsComponent::HandleJumpsAndCoyoteTime(bool activeKeys[static_cast<int>
 		mSliding = false;
 		mCrouching = false;
 	}
+
+	oldRightWallNearCheck = m_NearRightWall;
+	oldLeftWallNearCheck = m_NearLeftWall;
+
 }

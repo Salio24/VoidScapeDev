@@ -147,5 +147,11 @@ private:
 	int coyoteTimeTimer{ -1 };
 
 	bool death1{ false };
+
+	bool m_NearLeftWall{ false };
+	bool m_NearRightWall{ false };
+
+	bool m_WasNearLeftWall{ false };
+	bool m_WasNearRightWall{ false };
 };
 
